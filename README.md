@@ -30,7 +30,7 @@ import { NBPApiClient } from "nbp-api-client";
 
 const client = new NBPApiClient();
 
-// To get ratios for specified currency to gold
+// To get current gold price 
 await client.getGoldPrice();
 // ...
 
@@ -59,6 +59,8 @@ await client.getGoldPrice({ mode: `days-after`, days: 5, date: startDate });
 // ...
 
 ```
+
+All information about API you can find under link below:
 
 ```http
 

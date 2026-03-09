@@ -30,27 +30,27 @@ export class NBPApiClient {
     public async getGoldPrice(params?: GetGoldPriceParams): Promise<GetGoldPriceResponse> {
 
         const client = new Axios();
-        let url = this.host;
+        let url = this.host + '/cenyzlota';
         if (params) {
             switch (params.mode) {
                 case GetGoldPriceEnum.CURRENT:
                 case "current":
 
-                    url += `/cenyzlota`;
+                    // url already has /cenyzlota
                     break;
 
                 case GetGoldPriceEnum.TODAY:
                 case "today":
 
-                    url += `/cenyzlota/today`;
+                    url += `/today`;
                     break;
 
                 case GetGoldPriceEnum.FROM_DATE:
                 case "from-date":
 
-                    const date = new Date();
+                    const date = new Date(params.date);
                     const ISO8601FormedDate = date.toISOString().split(`T`).shift();
-                    url += `/cenyzlota/${ISO8601FormedDate}`
+                    url += `/${ISO8601FormedDate}`
                     break;
 
                 case GetGoldPriceEnum.BETWEEN_DATES:
@@ -61,7 +61,7 @@ export class NBPApiClient {
                     const ISO8601FormedStartDate = startDate.toISOString().split(`T`).shift();
                     const ISO8601FormedEndDate = endDate.toISOString().split(`T`).shift();
 
-                    url += `/cenyzlota/${ISO8601FormedStartDate}/${ISO8601FormedEndDate}`
+                    url += `/${ISO8601FormedStartDate}/${ISO8601FormedEndDate}`
                     break;
 
                 case GetGoldPriceEnum.DAYS_BEFORE:
@@ -81,7 +81,7 @@ export class NBPApiClient {
                     const ISO8601FormedRelativeStartDate = relativeStartDate.toISOString().split(`T`).shift();
                     const ISO8601FormedRelativeEndDate = relativeEndDate.toISOString().split(`T`).shift();
 
-                    url += `/cenyzlota/${ISO8601FormedRelativeStartDate}/${ISO8601FormedRelativeEndDate}`
+                    url += `/${ISO8601FormedRelativeStartDate}/${ISO8601FormedRelativeEndDate}`
                     break;
 
                 default:

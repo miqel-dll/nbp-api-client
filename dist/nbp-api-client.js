@@ -1,11 +1,13 @@
-import { GetGoldPriceEnum, OutputFormatEnum } from "./enums.js";
+import { GetGoldPriceEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum } from "./enums.js";
 import { Axios } from "axios";
 export class NBPApiClient {
-    config = null;
-    constructor(_config = {
-        outputFormat: OutputFormatEnum.JSON
-    }) {
-        this.config = _config;
+    config = {
+        outputFormat: OutputFormatEnum.JSON,
+        debug: false,
+        currency: Iso4217CurrencyCodeEnum.PLN,
+    };
+    constructor(_config) {
+        this.config = { ...this.config, ..._config };
     }
     ;
     get host() {
@@ -63,9 +65,11 @@ export class NBPApiClient {
             }
         }
         ;
-        console.log(`----------------`);
-        console.log(params.mode);
-        console.log(url);
+        const fomredDate = new Date().toISOString().split(`T`).shift();
+        if (this.config.debug === true) {
+            console.log(`${fomredDate} | NBPApiClient | Sending request to url: ${url}`);
+        }
+        ;
         const response = await client.get(url);
         if (!response.data) {
             throw new Error(`Failed to receive gold price.`);
@@ -76,26 +80,17 @@ export class NBPApiClient {
             throw new Error(`Received unknown response format.`);
         }
         ;
-        console.log(rawData);
         const data = rawData.map((row => ({
             date: new Date(row.data),
             price: Number(row.cena)
         })));
-        console.log(data);
+        if (this.config.debug === true) {
+            console.log(`${fomredDate} | NBPApiClient | Successfully found ${data.length} records`);
+        }
+        ;
         return data;
     }
     ;
 }
 ;
-const client = new NBPApiClient({ outputFormat: OutputFormatEnum.JSON });
-const startDate = new Date();
-startDate.setDate(startDate.getDate() - 8);
-const endDate = new Date();
-endDate.setDate(endDate.getDate() - 2);
-await client.getGoldPrice({ mode: 'between-dates', startDate, endDate });
-await client.getGoldPrice({ mode: `from-date`, date: endDate });
-await client.getGoldPrice({ mode: `days-before`, days: 2, date: endDate });
-await client.getGoldPrice({ mode: `days-after`, days: 5, date: startDate });
-await client.getGoldPrice({ mode: `current` });
-await client.getGoldPrice({ mode: `today` });
 //# sourceMappingURL=nbp-api-client.js.map

@@ -1,6 +1,6 @@
 {
   "name": "nbp-api-client",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Library that enables easy retrieval and processing of data from the National Bank of Poland (NBP) API, such as exchange rates and historical currency data. A simple interface allows quick integration of financial data into your applications.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -26,15 +26,37 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts"
   },
   "bugs": {
     "url": "https://github.com/miqel-dll/nbp-api-client/issues"
   },
   "homepage": "https://github.com/miqel-dll/nbp-api-client#readme",
   "sideEffects": false,
+  "jest": {
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "node",
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "testMatch": [
+      "**/src/**/*.test.ts"
+    ]
+  },
   "devDependencies": {
-    "@types/node": "^25.3.5"
+    "@eslint/js": "^10.0.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.3.5",
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
+    "eslint": "^10.0.3",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6"
   },
   "dependencies": {
     "axios": "^1.13.6"
