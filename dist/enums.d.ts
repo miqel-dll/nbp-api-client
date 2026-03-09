@@ -15,6 +15,10 @@ export declare enum GetGoldPriceEnum {
     DAYS_BEFORE = "days-before",
     DAYS_AFTER = "days-after"
 }
+export declare enum GoldMeasureUnitEnum {
+    OUNCES = "ounces",
+    GRAMS = "grams"
+}
 export declare enum Iso4217CurrencyCodeEnum {
     AED = "AED",
     AFN = "AFN",

@@ -1,15 +1,17 @@
-import { GetGoldPriceEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum } from "./enums.js";
+import { GetGoldPriceEnum, GoldMeasureUnitEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum } from "./enums.js";
 import { Axios } from "axios";
 export class NBPApiClient {
     config = {
         outputFormat: OutputFormatEnum.JSON,
         debug: false,
-        currency: Iso4217CurrencyCodeEnum.PLN,
+        currency: Iso4217CurrencyCodeEnum.USD,
+        unit: GoldMeasureUnitEnum.OUNCES,
     };
     constructor(_config) {
         this.config = { ...this.config, ..._config };
     }
     ;
+    goldOunceInGrams = 31.1034768;
     get host() {
         return Buffer.from("aHR0cHM6Ly9hcGkubmJwLnBsL2FwaQ==", "base64").toString("utf-8");
     }
@@ -19,22 +21,21 @@ export class NBPApiClient {
     ;
     async getGoldPrice(params) {
         const client = new Axios();
-        let url = this.host;
+        let url = this.host + '/cenyzlota';
         if (params) {
             switch (params.mode) {
                 case GetGoldPriceEnum.CURRENT:
                 case "current":
-                    url += `/cenyzlota`;
                     break;
                 case GetGoldPriceEnum.TODAY:
                 case "today":
-                    url += `/cenyzlota/today`;
+                    url += `/today`;
                     break;
                 case GetGoldPriceEnum.FROM_DATE:
                 case "from-date":
-                    const date = new Date();
+                    const date = new Date(params.date);
                     const ISO8601FormedDate = date.toISOString().split(`T`).shift();
-                    url += `/cenyzlota/${ISO8601FormedDate}`;
+                    url += `/${ISO8601FormedDate}`;
                     break;
                 case GetGoldPriceEnum.BETWEEN_DATES:
                 case "between-dates":
@@ -42,7 +43,7 @@ export class NBPApiClient {
                     const endDate = typeof params.endDate === `string` ? new Date() : params.endDate;
                     const ISO8601FormedStartDate = startDate.toISOString().split(`T`).shift();
                     const ISO8601FormedEndDate = endDate.toISOString().split(`T`).shift();
-                    url += `/cenyzlota/${ISO8601FormedStartDate}/${ISO8601FormedEndDate}`;
+                    url += `/${ISO8601FormedStartDate}/${ISO8601FormedEndDate}`;
                     break;
                 case GetGoldPriceEnum.DAYS_BEFORE:
                 case "days-before":
@@ -58,7 +59,7 @@ export class NBPApiClient {
                     }
                     const ISO8601FormedRelativeStartDate = relativeStartDate.toISOString().split(`T`).shift();
                     const ISO8601FormedRelativeEndDate = relativeEndDate.toISOString().split(`T`).shift();
-                    url += `/cenyzlota/${ISO8601FormedRelativeStartDate}/${ISO8601FormedRelativeEndDate}`;
+                    url += `/${ISO8601FormedRelativeStartDate}/${ISO8601FormedRelativeEndDate}`;
                     break;
                 default:
                     throw new Error(`Unknown retrieving moge for gold price.`);
@@ -70,9 +71,20 @@ export class NBPApiClient {
             console.log(`${fomredDate} | NBPApiClient | Sending request to url: ${url}`);
         }
         ;
-        const response = await client.get(url);
+        const priceMultiplier = this.config.unit === GoldMeasureUnitEnum.OUNCES ? this.goldOunceInGrams : 1;
+        const response = await client.get(url, { params: { format: this.config.outputFormat } });
         if (!response.data) {
             throw new Error(`Failed to receive gold price.`);
+        }
+        ;
+        if (this.config.outputFormat === `xml`) {
+            const pattern = /<Price>([\d.]+)<\/Price>/g;
+            response.data = response.data
+                .replaceAll("Data", "Date")
+                .replaceAll("CenaZlota", "GoldPrice")
+                .replaceAll("Cena", "Price")
+                .replace(pattern, (_, value) => (`<Price>${Number((Number(value) * priceMultiplier).toFixed(3))}</Price>`));
+            return response.data;
         }
         ;
         const rawData = JSON.parse(response.data);
@@ -81,8 +93,10 @@ export class NBPApiClient {
         }
         ;
         const data = rawData.map((row => ({
-            date: new Date(row.data),
-            price: Number(row.cena)
+            date: new Date(row?.data),
+            price: Number((Number(row?.cena) * priceMultiplier).toFixed(3)),
+            currency: this.config.currency,
+            unit: this.config.unit,
         })));
         if (this.config.debug === true) {
             console.log(`${fomredDate} | NBPApiClient | Successfully found ${data.length} records`);
@@ -93,4 +107,7 @@ export class NBPApiClient {
     ;
 }
 ;
+const client = new NBPApiClient({ outputFormat: `xml` });
+const data = await client.getGoldPrice();
+console.log(data);
 //# sourceMappingURL=nbp-api-client.js.map

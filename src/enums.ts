@@ -18,6 +18,11 @@ export enum GetGoldPriceEnum {
     DAYS_AFTER = `days-after`,
 };
 
+export enum GoldMeasureUnitEnum {
+    OUNCES = `ounces`,
+    GRAMS = `grams`,
+};
+
 export enum Iso4217CurrencyCodeEnum {
     AED = "AED",
     AFN = "AFN",

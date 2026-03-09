@@ -20,6 +20,12 @@ export var GetGoldPriceEnum;
     GetGoldPriceEnum["DAYS_AFTER"] = "days-after";
 })(GetGoldPriceEnum || (GetGoldPriceEnum = {}));
 ;
+export var GoldMeasureUnitEnum;
+(function (GoldMeasureUnitEnum) {
+    GoldMeasureUnitEnum["OUNCES"] = "ounces";
+    GoldMeasureUnitEnum["GRAMS"] = "grams";
+})(GoldMeasureUnitEnum || (GoldMeasureUnitEnum = {}));
+;
 export var Iso4217CurrencyCodeEnum;
 (function (Iso4217CurrencyCodeEnum) {
     Iso4217CurrencyCodeEnum["AED"] = "AED";

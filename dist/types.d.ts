@@ -1,8 +1,9 @@
-import { GetGoldPriceEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum } from "./enums.js";
+import { GetGoldPriceEnum, GoldMeasureUnitEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum } from "./enums.js";
 export type NBPApiClientConfiguration = {
     outputFormat: OutputFormatEnum | `xml` | `json`;
     debug: boolean;
     currency: Iso4217CurrencyCodeEnum;
+    unit: GoldMeasureUnitEnum;
 };
 export type GetGoldPriceResponse<T extends never | `raw` = never> = GoldPriceRecord<T>[];
 export type GoldPriceRecord<T extends never | `raw`> = [T] extends [never] ? FormedGoldPriceRecord : RawGoldPriceRecord;
@@ -13,6 +14,8 @@ type FormedGoldPriceRecord = {
 type RawGoldPriceRecord = {
     data: string;
     cena: number;
+    currency: Iso4217CurrencyCodeEnum;
+    unit: GoldMeasureUnitEnum;
 };
 export type GetGoldPriceParams = GetCurrentGoldPrice | GetGoldPriceFromToday | GetGoldPriceBetweenDates | GetGoldPriceForRelativeTime;
 type GettingGoldParamsEssentials = {
