@@ -25,6 +25,9 @@
   "author": "miqel-dll",
   "license": "MIT",
   "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
   "bugs": {
     "url": "https://github.com/miqel-dll/nbp-api/issues"
   },

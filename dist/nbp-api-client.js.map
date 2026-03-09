@@ -1,0 +1,1 @@
+{"version":3,"file":"nbp-api-client.js","sourceRoot":"","sources":["../src/nbp-api-client.ts"],"names":[],"mappings":"AAEA,MAAM,OAAO,YAAY;IAGT;IADZ,YACY,MAAiC;QAAjC,WAAM,GAAN,MAAM,CAA2B;IACzC,CAAC;IAEL,IAAY,IAAI;QACZ,OAAO,MAAM,CAAC,IAAI,CAAC,kCAAkC,EAAE,QAAQ,CAAC,CAAC,QAAQ,CAAC,OAAO,CAAC,CAAC;IACvF,CAAC;IAAA,CAAC;CAIL;AAAA,CAAC"}
