@@ -1,8 +1,8 @@
-import { GetGoldPriceResponse, NBPApiClientConfiguration } from "./types.js";
+import { GetGoldPriceParams, GetGoldPriceResponse, GetRatesParams, NBPApiClientConfiguration } from "./types.js";
 export declare class NBPApiClient {
     private config;
-    constructor(_config: NBPApiClientConfiguration);
+    constructor(_config?: NBPApiClientConfiguration);
     private get host();
-    getRates(): Promise<void>;
-    getGoldPrice(): Promise<GetGoldPriceResponse>;
+    getRates({}: GetRatesParams): Promise<void>;
+    getGoldPrice(params?: GetGoldPriceParams): Promise<GetGoldPriceResponse>;
 }

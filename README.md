@@ -8,9 +8,9 @@ It is built using modern modular JavaScript and includes full type definitions a
 
 npm install nbp-api-client
 
-## Usage
+## Getting currencies ratios
 
-```typescript
+```ts
 
 import { NBPApiClient } from "nbp-api-client";
 
@@ -20,8 +20,42 @@ const client = new NBPApiClient();
 const rates = await client.getRates();
 // ...
 
-// To get ratios for specified currency to Gold
-const goldRates = await client.getGoldPrice();
+```
+
+## Getting Gold Details
+
+```ts
+
+import { NBPApiClient } from "nbp-api-client";
+
+const client = new NBPApiClient();
+
+// To get ratios for specified currency to gold
+await client.getGoldPrice();
+// ...
+
+// To get current gold price 
+await client.getGoldPrice({ mode: `current` });
+// ...
+
+// To get current gold price 
+await client.getGoldPrice({ mode: `today` });
+// ...
+
+// To get gold prices from between two specified dates.
+await client.getGoldPrice({ mode: 'between-dates', startDate, endDate });
+// ...
+
+// To get gold prices from the specified date
+await client.getGoldPrice({ mode: `from-date`, date: endDate });
+// ...
+
+// To get gold prices relative to specified date
+await client.getGoldPrice({ mode: `days-before`, days: 2, date: endDate });
+// ...
+
+// To get gold prices relative to specified date
+await client.getGoldPrice({ mode: `days-after`, days: 5, date: startDate });
 // ...
 
 ```
