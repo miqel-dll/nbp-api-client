@@ -1,4 +1,4 @@
-export enum NBPTableCodeEnum {
+export enum TableCodeEnum {
     A = "A",
     B = "B",
     C = "C",
