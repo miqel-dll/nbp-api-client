@@ -10,9 +10,19 @@ npm install nbp-api-client
 
 ## Usage
 
-```js
+```typescript
 
-import { getExchangeRates } from "nbp-api-client";
+import { NBPApiClient } from "nbp-api-client";
+
+const client = new NBPApiClient();
+
+// To get ratios for specified currency to PLN
+const rates = await client.getRates();
+// ...
+
+// To get ratios for specified currency to Gold
+const goldRates = await client.getGoldPrice();
+// ...
 
 ```
 

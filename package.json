@@ -1,6 +1,6 @@
 {
   "name": "nbp-api-client",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Library that enables easy retrieval and processing of data from the National Bank of Poland (NBP) API, such as exchange rates and historical currency data. A simple interface allows quick integration of financial data into your applications.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/miqel-dll/nbp-api.git"
+    "url": "git+https://github.com/miqel-dll/nbp-api-client.git"
   },
   "files": [
     "dist"
@@ -29,9 +29,9 @@
     "build": "tsc"
   },
   "bugs": {
-    "url": "https://github.com/miqel-dll/nbp-api/issues"
+    "url": "https://github.com/miqel-dll/nbp-api-client/issues"
   },
-  "homepage": "https://github.com/miqel-dll/nbp-api#readme",
+  "homepage": "https://github.com/miqel-dll/nbp-api-client#readme",
   "sideEffects": false,
   "devDependencies": {
     "@types/node": "^25.3.5"
