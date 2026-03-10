@@ -1,5 +1,11 @@
-import { GetGoldPriceParams, GetGoldPriceResponse, GetRatesParams, GetTablesParams, NBPApiClientConfiguration } from "./types.js";
-import { GetGoldPriceEnum, GoldMeasureUnitEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum } from "./enums.js";
+import {
+    GetGoldPriceParams, GetGoldPriceResponse, GetRatesParams, GetTableResponse,
+    GetTablesParams, NBPApiClientConfiguration, TableCodes
+} from "./types.js";
+import {
+    GetGoldPriceEnum, GetTableDataEnum, GoldMeasureUnitEnum,
+    Iso4217CurrencyCodeEnum, OutputFormatEnum, TableCodeEnum
+} from "./enums.js";
 import { Axios } from "axios";
 export class NBPApiClient {
 
@@ -67,14 +73,97 @@ export class NBPApiClient {
         return `${prefix}/${ISO8601FormedDate}`;
     };
 
-    public async getTables(
-        params: GetTablesParams
-    ): Promise<string> {
+    public async getTables<T extends TableCodes | TableCodeEnum>(
+        params: GetTablesParams & { table: T }
+    ): Promise<GetTableResponse<T> | string> {
 
         const client = new Axios();
         let url = `${this.host}/exchangerates/tables/${params.table}`;
 
-        return ``;
+        if (params.mode !== "current") {
+            switch (params.mode) {
+                case GetTableDataEnum.TOP_COUNT:
+                case "top-count":
+
+                    url += `/last/${params.maxCount}`;
+                    break;
+
+                case GetTableDataEnum.TODAY:
+                case "today":
+
+                    url += `/today`;
+                    break;
+
+                case GetTableDataEnum.SPECIFIED_DATE:
+                case "specified-date":
+
+                    url = this.prepareUrlForSpecifiedDate(url, params.date);
+                    break;
+
+                case GetTableDataEnum.BETWEEN_DATES:
+                case "between-dates":
+
+                    const { startDate, endDate } = params;
+                    url = this.prepareUrlForDateRange(url, startDate, endDate);
+                    break;
+
+                case GetTableDataEnum.DAYS_BEFORE:
+                case "days-before":
+                case GetTableDataEnum.DAYS_AFTER:
+                case "days-after":
+
+                    const { date, days, mode } = params;
+                    url = this.prepareUrlForRelativeDate(url, date, days, mode);
+                    break;
+
+                default:
+                    throw new Error(`Unknown retrieving mode for tables data for table.`);
+            };
+        }
+
+        const fomredDate = new Date().toISOString().replace("T", " ");
+        if (this.config.debug === true) {
+            console.log(`${fomredDate} | NBPApiClient | Sending request to url: ${url}`);
+        };
+
+        const currencyFactor: number = this.config.currency === Iso4217CurrencyCodeEnum.PLN ? 1 : 1;
+        const response = await client.get<string>(url, { params: { format: this.config.outputFormat } });
+        if (!response.data) {
+            throw new Error(`Failed to receive rates tables.`);
+        };
+
+        if (response.status === 404) {
+            throw new Error(`There are no data for ${params.mode}, status: 404.`);
+        }
+
+        if (this.config.outputFormat === `xml`) {
+
+            const pattern = /<Price>([\d.]+)<\/Price>/g;
+            response.data = response.data
+                .replaceAll("Data", "Date")
+                .replaceAll("Cena", "Price")
+                .replace(pattern, (_, value) => (
+                    `<Price>${Number((Number(value) / currencyFactor).toFixed(3))}</Price>`
+                ));
+
+            return response.data;
+        };
+
+        typeof params.mode
+        const rawData: GetTableResponse<T> = JSON.parse(response.data);
+        if (!Array.isArray(rawData)) {
+            throw new Error(`Received unknown response format.`);
+        };
+
+        console.debug(rawData.at(0).rates);
+
+        if (this.config.debug === true) {
+            console.debug(`${fomredDate} | NBPApiClient | Successfully found ${rawData.length} records`);
+            console.debug(`${fomredDate} | NBPApiClient | RAW Response:`);
+            console.debug(rawData);
+        };
+
+        return rawData;
     };
 
     public async getRates(
@@ -89,13 +178,9 @@ export class NBPApiClient {
 
         const client = new Axios();
         let url = `${this.host}/cenyzlota`;
-        if (params) {
+
+        if (params && params.mode !== "current") {
             switch (params.mode) {
-                case GetGoldPriceEnum.CURRENT:
-                case "current":
-
-                    break;
-
                 case GetGoldPriceEnum.TODAY:
                 case "today":
 
@@ -120,16 +205,16 @@ export class NBPApiClient {
                 case GetGoldPriceEnum.DAYS_AFTER:
                 case "days-after":
 
-                    const { days, mode } = params;
-                    url = this.prepareUrlForRelativeDate(url, params.date, days, mode);
+                    const { days, mode, date } = params;
+                    url = this.prepareUrlForRelativeDate(url, date, days, mode);
                     break;
 
                 default:
-                    throw new Error(`Unknown retrieving moge for gold price.`);
+                    throw new Error(`Unknown retrieving mode for gold price.`);
             }
         };
 
-        const fomredDate = new Date().toISOString().split(`T`).shift();
+        const fomredDate = new Date().toISOString().replace("T", " ");
         if (this.config.debug === true) {
             console.log(`${fomredDate} | NBPApiClient | Sending request to url: ${url}`);
         };
@@ -175,3 +260,8 @@ export class NBPApiClient {
     };
 
 };
+
+const client = new NBPApiClient({ outputFormat: `json`, debug: true });
+// console.debug(await client.getTables({ mode: 'today', table: "A" }));
+console.debug(await client.getTables({ mode: 'current', table: "A" }));
+// console.debug(await client.getTables({ mode: 'today', table: "C" }));

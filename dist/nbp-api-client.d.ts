@@ -1,4 +1,5 @@
-import { GetGoldPriceParams, GetGoldPriceResponse, GetRatesParams, GetTablesParams, NBPApiClientConfiguration } from "./types.js";
+import { GetGoldPriceParams, GetGoldPriceResponse, GetRatesParams, GetTableResponse, GetTablesParams, NBPApiClientConfiguration, TableCodes } from "./types.js";
+import { TableCodeEnum } from "./enums.js";
 export declare class NBPApiClient {
     private config;
     private maxDaysRange;
@@ -8,7 +9,9 @@ export declare class NBPApiClient {
     private prepareUrlForRelativeDate;
     private prepareUrlForDateRange;
     private prepareUrlForSpecifiedDate;
-    getTables(params: GetTablesParams): Promise<string>;
+    getTables<T extends TableCodes | TableCodeEnum>(params: GetTablesParams & {
+        table: T;
+    }): Promise<GetTableResponse<T> | string>;
     getRates({}: GetRatesParams): Promise<string>;
     getGoldPrice(params?: GetGoldPriceParams): Promise<GetGoldPriceResponse | string>;
 }

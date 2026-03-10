@@ -18,6 +18,16 @@ export enum GetGoldPriceEnum {
     DAYS_AFTER = `days-after`,
 };
 
+export enum GetTableDataEnum {
+    CURRENT = "current",
+    TOP_COUNT = `top-count`,
+    TODAY = `today`,
+    SPECIFIED_DATE = `specified-date`,
+    BETWEEN_DATES = `between-dates`,
+    DAYS_BEFORE = `days-before`,
+    DAYS_AFTER = `days-after`,
+};
+
 export enum GoldMeasureUnitEnum {
     OUNCES = `ounces`,
     GRAMS = `grams`,

@@ -20,6 +20,17 @@ export var GetGoldPriceEnum;
     GetGoldPriceEnum["DAYS_AFTER"] = "days-after";
 })(GetGoldPriceEnum || (GetGoldPriceEnum = {}));
 ;
+export var GetTableDataEnum;
+(function (GetTableDataEnum) {
+    GetTableDataEnum["CURRENT"] = "current";
+    GetTableDataEnum["TOP_COUNT"] = "top-count";
+    GetTableDataEnum["TODAY"] = "today";
+    GetTableDataEnum["SPECIFIED_DATE"] = "specified-date";
+    GetTableDataEnum["BETWEEN_DATES"] = "between-dates";
+    GetTableDataEnum["DAYS_BEFORE"] = "days-before";
+    GetTableDataEnum["DAYS_AFTER"] = "days-after";
+})(GetTableDataEnum || (GetTableDataEnum = {}));
+;
 export var GoldMeasureUnitEnum;
 (function (GoldMeasureUnitEnum) {
     GoldMeasureUnitEnum["OUNCES"] = "ounces";

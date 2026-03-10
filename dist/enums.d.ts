@@ -15,6 +15,15 @@ export declare enum GetGoldPriceEnum {
     DAYS_BEFORE = "days-before",
     DAYS_AFTER = "days-after"
 }
+export declare enum GetTableDataEnum {
+    CURRENT = "current",
+    TOP_COUNT = "top-count",
+    TODAY = "today",
+    SPECIFIED_DATE = "specified-date",
+    BETWEEN_DATES = "between-dates",
+    DAYS_BEFORE = "days-before",
+    DAYS_AFTER = "days-after"
+}
 export declare enum GoldMeasureUnitEnum {
     OUNCES = "ounces",
     GRAMS = "grams"

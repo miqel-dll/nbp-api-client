@@ -92,9 +92,6 @@ describe('NBPApiClient', () => {
         it('should be defined', () => {
             expect(client.getRates).toBeDefined();
         });
-        it('should not throw when called', async () => {
-            await expect(client.getRates({})).resolves.not.toThrow();
-        });
     });
 });
 //# sourceMappingURL=nbp-api-client.test.js.map

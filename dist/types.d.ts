@@ -1,4 +1,4 @@
-import { GetGoldPriceEnum, GoldMeasureUnitEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum, TableCodeEnum } from "./enums.js";
+import { GetGoldPriceEnum, GetTableDataEnum, GoldMeasureUnitEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum, TableCodeEnum } from "./enums.js";
 export type NBPApiClientConfiguration = {
     outputFormat: OutputFormatEnum | `xml` | `json`;
     debug: boolean;
@@ -41,23 +41,56 @@ export type GetGoldPriceForRelativeTime = GettingGoldParamsEssentials & {
 type GettingTableParamsEssentials = {
     currency?: Iso4217CurrencyCodeEnum;
 };
-type TableCodes = `A` | `B` | `C`;
-export type GetTablesParams = GetDataFromSpecifiedTableParams | GetTopCountFromSpecifiedTableParams | GetTablesFromToday;
-export type GetDataFromSpecifiedTableParams = GettingTableParamsEssentials & {
-    mode: `specified-table`;
+export type TableCodes = `A` | `B` | `C`;
+export type GetTablesParams = GetCurrentDataFromTableParams | GetTopCountFromSpecifiedTableParams | GetTablesFromTodayParams | GetTableDataFromSpecifiedDateParams | GetTableDataFromBetweenSpecifiedDatesParams | GetTableDataForRelativeTime;
+export type GetCurrentDataFromTableParams = GettingTableParamsEssentials & {
+    mode: 'current' | GetTableDataEnum.CURRENT;
     table: TableCodes | TableCodeEnum;
 };
 export type GetTopCountFromSpecifiedTableParams = GettingTableParamsEssentials & {
-    mode: `top-count`;
+    mode: `top-count` | GetTableDataEnum.TOP_COUNT;
     table: TableCodes | TableCodeEnum;
+    maxCount: number;
 };
-export type GetTablesFromToday = GettingTableParamsEssentials & {
-    mode: `today`;
+export type GetTablesFromTodayParams = GettingTableParamsEssentials & {
+    mode: `today` | GetTableDataEnum.TODAY;
     table: TableCodeEnum | TableCodes;
 };
-export type GetTableDataFromSpecifiedDateParams = {
-    mode: `specified-date`;
+export type GetTableDataFromSpecifiedDateParams = GettingTableParamsEssentials & {
+    mode: `specified-date` | GetTableDataEnum.SPECIFIED_DATE;
     table: TableCodeEnum;
+    date: Date | string;
+};
+export type GetTableDataFromBetweenSpecifiedDatesParams = GettingTableParamsEssentials & {
+    mode: `between-dates` | GetTableDataEnum.BETWEEN_DATES;
+    table: TableCodeEnum;
+    startDate: Date | string;
+    endDate: Date | string;
+};
+export type GetTableDataForRelativeTime = GettingGoldParamsEssentials & {
+    mode: `days-before` | `days-after` | GetTableDataEnum.DAYS_BEFORE | GetTableDataEnum.DAYS_AFTER;
+    table: TableCodeEnum;
+    date: Date | string;
+    days: number;
+};
+export type GetTableResponse<T extends TableCodes | TableCodeEnum> = GetTableRow<T>[];
+export type GetTableRow<T extends TableCodes | TableCodeEnum> = {
+    table: TableCodeEnum | TableCodes;
+    no: string;
+    effectiveDate: string;
+    rates: GetTableRowRate<T>[];
+};
+export type GetTableRowRate<T extends TableCodes | TableCodeEnum> = [
+    T
+] extends ["C"] ? {
+    currency: string;
+    code: CurrencyCode | Iso4217CurrencyCodeEnum;
+    bid: number;
+    ask: number;
+} : {
+    currency: string;
+    code: CurrencyCode | Iso4217CurrencyCodeEnum;
+    mid: number;
 };
 export type GetRatesParams = {};
 export type CurrencyCode = "AED" | "AFN" | "ALL" | "AMD" | "AOA" | "ARS" | "AUD" | "AWG" | "AZN" | "BAM" | "BBD" | "BDT" | "BHD" | "BIF" | "BMD" | "BND" | "BOB" | "BOV" | "BRL" | "BSD" | "BTN" | "BWP" | "BYN" | "BZD" | "CAD" | "CDF" | "CHE" | "CHF" | "CHW" | "CLF" | "CLP" | "CNY" | "COP" | "COU" | "CRC" | "CUP" | "CVE" | "CZK" | "DJF" | "DKK" | "DOP" | "DZD" | "EGP" | "ERN" | "ETB" | "EUR" | "FJD" | "FKP" | "GBP" | "GEL" | "GHS" | "GIP" | "GMD" | "GNF" | "GTQ" | "GYD" | "HKD" | "HNL" | "HTG" | "HUF" | "IRD" | "ILS" | "INR" | "IQD" | "IRR" | "ISK" | "JMD" | "JOD" | "JPY" | "KES" | "KGS" | "KHR" | "KMF" | "KPW" | "KRW" | "KWD" | "KYD" | "KZT" | "LAK" | "LBP" | "LKR" | "LRD" | "LSL" | "LYD" | "MAD" | "MDL" | "MGA" | "MKD" | "MMK" | "MNT" | "MOP" | "MRU" | "MUR" | "MVR" | "MWK" | "MXN" | "MXV" | "MYR" | "MZN" | "NAD" | "NGN" | "NIO" | "NOK" | "NPR" | "NZD" | "OMR" | "PAB" | "PEN" | "PGK" | "PHP" | "PKR" | "PLN" | "PYG" | "QAR" | "RON" | "RSD" | "RUB" | "RWF" | "SAR" | "SBD" | "SCR" | "SDG" | "SEK" | "SGD" | "SHP" | "SLE" | "SOS" | "SRD" | "SSP" | "STN" | "SVC" | "SYP" | "SZL" | "THB" | "TJS" | "TMT" | "TND" | "TOP" | "TRY" | "TTD" | "TWD" | "TZS" | "UAH" | "UGX" | "USD" | "USN" | "UYI" | "UYU" | "UYW" | "UZS" | "VED" | "VES" | "VND" | "VUV" | "WST" | "XAD" | "XAF" | "XAG" | "XAU" | "XBA" | "XBB" | "XBC" | "XBD" | "XCD" | "XCG" | "XDR" | "XOF" | "XPD" | "XPF" | "XPT" | "XSU" | "XTS" | "XUA" | "XXX" | "YER" | "ZAR" | "ZMW" | "ZWG";

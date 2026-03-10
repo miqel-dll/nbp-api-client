@@ -1,4 +1,4 @@
-import { GetGoldPriceEnum, GoldMeasureUnitEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum, TableCodeEnum } from "./enums.js";
+import { GetGoldPriceEnum, GetTableDataEnum, GoldMeasureUnitEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum, TableCodeEnum } from "./enums.js";
 
 export type NBPApiClientConfiguration = {
     outputFormat: OutputFormatEnum | `xml` | `json`,
@@ -77,38 +77,97 @@ type GettingTableParamsEssentials = {
     currency?: Iso4217CurrencyCodeEnum
 };
 
-type TableCodes = `A` | `B` | `C`;
+export type TableCodes = `A` | `B` | `C`;
 
 export type GetTablesParams =
-    | GetDataFromSpecifiedTableParams
+    | GetCurrentDataFromTableParams
     | GetTopCountFromSpecifiedTableParams
-    | GetTablesFromToday;
+    | GetTablesFromTodayParams
+    | GetTableDataFromSpecifiedDateParams
+    | GetTableDataFromBetweenSpecifiedDatesParams
+    | GetTableDataForRelativeTime;
 
-export type GetDataFromSpecifiedTableParams =
+export type GetCurrentDataFromTableParams =
     GettingTableParamsEssentials & {
-        mode: `specified-table`,
+        mode:
+        | 'current'
+        | GetTableDataEnum.CURRENT,
         table: TableCodes | TableCodeEnum,
-    };
+    }
 
 export type GetTopCountFromSpecifiedTableParams =
     GettingTableParamsEssentials & {
-        mode: `top-count`,
+        mode:
+        | `top-count`
+        | GetTableDataEnum.TOP_COUNT,
         table: TableCodes | TableCodeEnum,
+        maxCount: number,
     };
 
-export type GetTablesFromToday =
+export type GetTablesFromTodayParams =
     GettingTableParamsEssentials & {
-        mode: `today`,
+        mode:
+        | `today`
+        | GetTableDataEnum.TODAY,
         table: TableCodeEnum | TableCodes,
     };
 
-export type GetTableDataFromSpecifiedDateParams = {
-    mode: `specified-date`,
-    table: TableCodeEnum,
-};
+export type GetTableDataFromSpecifiedDateParams =
+    GettingTableParamsEssentials & {
+        mode:
+        | `specified-date`
+        | GetTableDataEnum.SPECIFIED_DATE,
+        table: TableCodeEnum,
+        date: Date | string,
+    };
+
+export type GetTableDataFromBetweenSpecifiedDatesParams =
+    GettingTableParamsEssentials & {
+        mode:
+        | `between-dates`
+        | GetTableDataEnum.BETWEEN_DATES,
+        table: TableCodeEnum,
+        startDate: Date | string,
+        endDate: Date | string,
+    };
+
+export type GetTableDataForRelativeTime =
+    GettingGoldParamsEssentials & {
+        mode:
+        | `days-before`
+        | `days-after`
+        | GetTableDataEnum.DAYS_BEFORE
+        | GetTableDataEnum.DAYS_AFTER,
+        table: TableCodeEnum,
+        date: Date | string,
+        days: number,
+    }
+
+export type GetTableResponse<T extends TableCodes | TableCodeEnum> = GetTableRow<T>[];
+
+export type GetTableRow<T extends TableCodes | TableCodeEnum> = {
+    table: TableCodeEnum | TableCodes,
+    no: string,
+    effectiveDate: string,
+
+    rates: GetTableRowRate<T>[],
+}
+
+export type GetTableRowRate<T extends TableCodes | TableCodeEnum> =
+    [T] extends ["C"]
+    ? {
+        currency: string,
+        code: CurrencyCode | Iso4217CurrencyCodeEnum,
+        bid: number,
+        ask: number,
+    } :
+    {
+        currency: string,
+        code: CurrencyCode | Iso4217CurrencyCodeEnum,
+        mid: number,
+    }
 
 export type GetRatesParams = {
-
 };
 
 export type CurrencyCode =
