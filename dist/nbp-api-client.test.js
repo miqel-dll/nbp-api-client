@@ -10,7 +10,7 @@ describe('NBPApiClient', () => {
         Axios.mockImplementation(() => ({
             get: mockGet
         }));
-        client = new NBPApiClient();
+        client = new NBPApiClient({ currency: `PLN` });
     });
     afterEach(() => {
         jest.clearAllMocks();
@@ -25,7 +25,7 @@ describe('NBPApiClient', () => {
             expect(client).toBeInstanceOf(NBPApiClient);
         });
     });
-    describe('getGoldPrice', () => {
+    describe('getGoldPriceJSON', () => {
         const mockResponse = [
             { data: '2023-01-01', cena: 250.0 },
             { data: '2023-01-02', cena: 251.0 }
@@ -35,45 +35,45 @@ describe('NBPApiClient', () => {
         });
         it('should fetch current gold price when no params', async () => {
             const result = await client.getGoldPrice();
-            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota');
+            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota', { "params": { "format": "json" } });
             expect(result).toEqual([
-                { date: new Date('2023-01-01'), price: 250 },
-                { date: new Date('2023-01-02'), price: 251 }
+                { date: new Date('2023-01-01'), price: 7775.869, unit: "ounces", currency: "PLN" },
+                { date: new Date('2023-01-02'), price: 7806.973, unit: "ounces", currency: "PLN" }
             ]);
         });
         it('should fetch current gold price with mode current', async () => {
             const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.CURRENT, currency: Iso4217CurrencyCodeEnum.PLN });
-            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota');
+            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota', { "params": { "format": "json" } });
             expect(result).toHaveLength(2);
         });
         it('should fetch today gold price', async () => {
             const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.TODAY, currency: Iso4217CurrencyCodeEnum.PLN });
-            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/today');
+            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/today', { "params": { "format": "json" } });
             expect(result).toHaveLength(2);
         });
         it('should fetch gold price from specific date', async () => {
             const date = new Date('2023-01-01');
             const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.FROM_DATE, date, currency: Iso4217CurrencyCodeEnum.PLN });
-            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01');
+            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01', { "params": { "format": "json" } });
             expect(result).toHaveLength(2);
         });
         it('should fetch gold price between dates', async () => {
             const startDate = new Date('2023-01-01');
             const endDate = new Date('2023-01-02');
             const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.BETWEEN_DATES, startDate, endDate, currency: Iso4217CurrencyCodeEnum.PLN });
-            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01/2023-01-02');
+            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01/2023-01-02', { "params": { "format": "json" } });
             expect(result).toHaveLength(2);
         });
         it('should fetch gold price days before', async () => {
             const date = new Date('2023-01-05');
             const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.DAYS_BEFORE, date, days: 2, currency: Iso4217CurrencyCodeEnum.PLN });
-            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-03/2023-01-05');
+            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-03/2023-01-05', { "params": { "format": "json" } });
             expect(result).toHaveLength(2);
         });
         it('should fetch gold price days after', async () => {
             const date = new Date('2023-01-01');
             const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.DAYS_AFTER, date, days: 2, currency: Iso4217CurrencyCodeEnum.PLN });
-            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01/2023-01-03');
+            expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01/2023-01-03', { "params": { "format": "json" } });
             expect(result).toHaveLength(2);
         });
         it('should throw error for unknown mode', async () => {
