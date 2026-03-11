@@ -149,13 +149,10 @@ export class NBPApiClient {
             return response.data;
         };
 
-        typeof params.mode
         const rawData: GetTableResponse<T> = JSON.parse(response.data);
         if (!Array.isArray(rawData)) {
             throw new Error(`Received unknown response format.`);
         };
-
-        console.debug(rawData.at(0).rates);
 
         if (this.config.debug === true) {
             console.debug(`${fomredDate} | NBPApiClient | Successfully found ${rawData.length} records`);
@@ -163,6 +160,7 @@ export class NBPApiClient {
             console.debug(rawData);
         };
 
+        
         return rawData;
     };
 
@@ -261,7 +259,15 @@ export class NBPApiClient {
 
 };
 
+
+const oneMonthAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
+const twoWeeksAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 14);
+
 const client = new NBPApiClient({ outputFormat: `json`, debug: true });
-// console.debug(await client.getTables({ mode: 'today', table: "A" }));
-console.debug(await client.getTables({ mode: 'current', table: "A" }));
-// console.debug(await client.getTables({ mode: 'today', table: "C" }));
+// console.debug(await client.getTables({ mode: 'today', table: "A" }).catch(error => console.error(error)));
+console.debug(await client.getTables({ mode: 'current', table: "A" }).catch(error => console.error(error)));
+// console.debug(await client.getTables({ mode: 'top-count', maxCount: 5, table: "A" }).catch(error => console.error(error)));
+// console.debug(await client.getTables({ mode: 'between-dates', startDate: oneMonthAgo, endDate: twoWeeksAgo, table: 'A' }).catch(error => console.error(error)));
+// console.debug(await client.getTables({ mode: 'days-after', days: 10, date: oneMonthAgo, table: 'A' }).catch(error => console.error(error)));
+// console.debug(await client.getTables({ mode: 'days-before', days: 10, date: oneMonthAgo, table: 'A' }).catch(error => console.error(error)));
+// console.debug(await client.getTables({ mode: 'specified-date', date: oneMonthAgo, table: 'A' }).catch(error => console.error(error)));

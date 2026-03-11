@@ -88,7 +88,6 @@ export class NBPApiClient {
             console.log(`${fomredDate} | NBPApiClient | Sending request to url: ${url}`);
         }
         ;
-        const priceMultiplier = this.config.unit === GoldMeasureUnitEnum.OUNCES ? this.goldOunceInGrams : 1;
         const currencyFactor = this.config.currency === Iso4217CurrencyCodeEnum.PLN ? 1 : 1;
         const response = await client.get(url, { params: { format: this.config.outputFormat } });
         if (!response.data) {
@@ -102,19 +101,16 @@ export class NBPApiClient {
             const pattern = /<Price>([\d.]+)<\/Price>/g;
             response.data = response.data
                 .replaceAll("Data", "Date")
-                .replaceAll("CenaZlota", "GoldPrice")
                 .replaceAll("Cena", "Price")
-                .replace(pattern, (_, value) => (`<Price>${Number((Number(value) * priceMultiplier / currencyFactor).toFixed(3))}</Price>`));
+                .replace(pattern, (_, value) => (`<Price>${Number((Number(value) / currencyFactor).toFixed(3))}</Price>`));
             return response.data;
         }
         ;
-        typeof params.mode;
         const rawData = JSON.parse(response.data);
         if (!Array.isArray(rawData)) {
             throw new Error(`Received unknown response format.`);
         }
         ;
-        console.debug(rawData.at(0).rates);
         if (this.config.debug === true) {
             console.debug(`${fomredDate} | NBPApiClient | Successfully found ${rawData.length} records`);
             console.debug(`${fomredDate} | NBPApiClient | RAW Response:`);
@@ -200,8 +196,14 @@ export class NBPApiClient {
     ;
 }
 ;
+const oneMonthAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
+const twoWeeksAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 14);
 const client = new NBPApiClient({ outputFormat: `json`, debug: true });
-// console.debug(await client.getTables({ mode: 'today', table: "A" }));
-console.debug(await client.getTables({ mode: 'current', table: "A" }));
-// console.debug(await client.getTables({ mode: 'today', table: "C" }));
+console.debug(await client.getTables({ mode: 'today', table: "A" }).catch(error => console.error(error)));
+console.debug(await client.getTables({ mode: 'current', table: "A" }).catch(error => console.error(error)));
+console.debug(await client.getTables({ mode: 'top-count', maxCount: 5, table: "A" }).catch(error => console.error(error)));
+console.debug(await client.getTables({ mode: 'between-dates', startDate: oneMonthAgo, endDate: twoWeeksAgo, table: 'A' }).catch(error => console.error(error)));
+console.debug(await client.getTables({ mode: 'days-after', days: 10, date: oneMonthAgo, table: 'A' }).catch(error => console.error(error)));
+console.debug(await client.getTables({ mode: 'days-before', days: 10, date: oneMonthAgo, table: 'A' }).catch(error => console.error(error)));
+console.debug(await client.getTables({ mode: 'specified-date', date: oneMonthAgo, table: 'A' }).catch(error => console.error(error)));
 //# sourceMappingURL=nbp-api-client.js.map

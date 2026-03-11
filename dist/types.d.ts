@@ -40,36 +40,31 @@ export type GetGoldPriceForRelativeTime = GettingGoldParamsEssentials & {
 };
 type GettingTableParamsEssentials = {
     currency?: Iso4217CurrencyCodeEnum;
+    table: TableCodes | TableCodeEnum;
 };
 export type TableCodes = `A` | `B` | `C`;
 export type GetTablesParams = GetCurrentDataFromTableParams | GetTopCountFromSpecifiedTableParams | GetTablesFromTodayParams | GetTableDataFromSpecifiedDateParams | GetTableDataFromBetweenSpecifiedDatesParams | GetTableDataForRelativeTime;
 export type GetCurrentDataFromTableParams = GettingTableParamsEssentials & {
     mode: 'current' | GetTableDataEnum.CURRENT;
-    table: TableCodes | TableCodeEnum;
 };
 export type GetTopCountFromSpecifiedTableParams = GettingTableParamsEssentials & {
     mode: `top-count` | GetTableDataEnum.TOP_COUNT;
-    table: TableCodes | TableCodeEnum;
     maxCount: number;
 };
 export type GetTablesFromTodayParams = GettingTableParamsEssentials & {
     mode: `today` | GetTableDataEnum.TODAY;
-    table: TableCodeEnum | TableCodes;
 };
 export type GetTableDataFromSpecifiedDateParams = GettingTableParamsEssentials & {
     mode: `specified-date` | GetTableDataEnum.SPECIFIED_DATE;
-    table: TableCodeEnum;
     date: Date | string;
 };
 export type GetTableDataFromBetweenSpecifiedDatesParams = GettingTableParamsEssentials & {
     mode: `between-dates` | GetTableDataEnum.BETWEEN_DATES;
-    table: TableCodeEnum;
     startDate: Date | string;
     endDate: Date | string;
 };
-export type GetTableDataForRelativeTime = GettingGoldParamsEssentials & {
+export type GetTableDataForRelativeTime = GettingTableParamsEssentials & {
     mode: `days-before` | `days-after` | GetTableDataEnum.DAYS_BEFORE | GetTableDataEnum.DAYS_AFTER;
-    table: TableCodeEnum;
     date: Date | string;
     days: number;
 };
