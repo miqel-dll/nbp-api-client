@@ -169,8 +169,111 @@ export type GetTableRowRate<T extends TableCodes | TableCodeEnum> =
         mid: number,
     }
 
-export type GetRatesParams = {
+type GettingRatesParamsEssentials = {
+    table: TableCodes | TableCodeEnum,
+    code: CurrencyCode | Iso4217CurrencyCodeEnum,
 };
+
+export type GetRatesParams =
+    | GetCurrentRateParams
+    | GetRatesTopCountParams
+    | GetRatesTodayParams
+    | GetRatesForDateParams
+    | GetRatesForDateRangeParams
+    | GetRatesForRelativeTimeParams;
+
+export type GetCurrentRateParams =
+    GettingRatesParamsEssentials & {
+        mode:
+        | 'current'
+        | GetTableDataEnum.CURRENT,
+    };
+
+export type GetRatesTopCountParams =
+    GettingRatesParamsEssentials & {
+        mode:
+        | 'top-count'
+        | GetTableDataEnum.TOP_COUNT,
+        maxCount: number,
+    };
+
+export type GetRatesTodayParams =
+    GettingRatesParamsEssentials & {
+        mode:
+        | 'today'
+        | GetTableDataEnum.TODAY,
+    };
+
+export type GetRatesForDateParams =
+    GettingRatesParamsEssentials & {
+        mode:
+        | 'date'
+        | GetTableDataEnum.SPECIFIED_DATE,
+        date: Date | string,
+    };
+
+export type GetRatesForDateRangeParams =
+    GettingRatesParamsEssentials & {
+        mode:
+        | 'date-range'
+        | GetTableDataEnum.BETWEEN_DATES,
+        startDate: Date | string,
+        endDate: Date | string,
+    };
+
+export type GetRatesForRelativeTimeParams =
+    GettingRatesParamsEssentials & {
+        mode:
+        | 'days-before'
+        | 'days-after'
+        | GetTableDataEnum.DAYS_BEFORE
+        | GetTableDataEnum.DAYS_AFTER,
+        date: Date | string,
+        days: number,
+    };
+
+export type GetRatesResponse<O, T extends TableCodes | TableCodeEnum, M extends `raw` | never = never> =
+    [O] extends [`json` | OutputFormatEnum.JSON]
+    ? GetRateRow<T, M>
+    : [O] extends [`xml` | OutputFormatEnum.XML]
+    ? string
+    : never;
+
+export type GetRateRow<T extends TableCodes | TableCodeEnum, M extends `raw` | never = never> = {
+    table: TableCodeEnum | TableCodes,
+    currency: string,
+    code: CurrencyCode | Iso4217CurrencyCodeEnum,
+    rates: GetRateRowRate<T, M>[],
+};
+
+export type GetRateRowRate<T extends TableCodes | TableCodeEnum, M extends `raw` | never = never> =
+    [T] extends ["C"]
+    ? {
+        no: string,
+        effectiveDate: [M] extends [never] ? Date : string,
+        bid: number,
+        ask: number,
+    }
+    : {
+        no: string,
+        effectiveDate: [M] extends [never] ? Date : string,
+        mid: number,
+    };
+
+// Raw rate from API response (before transformation)
+export type RawRateRowRate<T extends TableCodes | TableCodeEnum> =
+    [T] extends ["C"]
+    ? {
+        no: string,
+        effectiveDate: string,
+        bid: number,
+        ask: number,
+    }
+    : {
+        no: string,
+        effectiveDate: string,
+        mid: number,
+    };
 
 export type CurrencyCode =
     | "AED"

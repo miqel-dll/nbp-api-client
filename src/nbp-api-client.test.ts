@@ -1,11 +1,11 @@
-import { GetGoldPriceEnum, Iso4217CurrencyCodeEnum } from './enums.js';
+import { GetGoldPriceEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum } from './enums.js';
 import { NBPApiClient } from './nbp-api-client.js';
 import { Axios } from 'axios';
 
 jest.mock('axios');
 
 describe('NBPApiClient', () => {
-  let client: NBPApiClient;
+  let client: NBPApiClient<OutputFormatEnum.JSON>;
   let mockGet: jest.Mock;
 
   beforeEach(() => {

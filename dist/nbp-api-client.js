@@ -1,8 +1,8 @@
-import { GetGoldPriceEnum, GetTableDataEnum, GoldMeasureUnitEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum } from "./enums.js";
+import { GetGoldPriceEnum, GetTableDataEnum, GoldMeasureUnitEnum, Iso4217CurrencyCodeEnum } from "./enums.js";
 import { Axios } from "axios";
 export class NBPApiClient {
     config = {
-        outputFormat: OutputFormatEnum.JSON,
+        outputFormat: null,
         debug: false,
         currency: Iso4217CurrencyCodeEnum.USD,
         unit: GoldMeasureUnitEnum.OUNCES,
@@ -83,6 +83,7 @@ export class NBPApiClient {
             }
             ;
         }
+        ;
         const fomredDate = new Date().toISOString().replace("T", " ");
         if (this.config.debug === true) {
             console.log(`${fomredDate} | NBPApiClient | Sending request to url: ${url}`);
@@ -111,7 +112,7 @@ export class NBPApiClient {
         }
         ;
         const rawData = JSON.parse(response.data);
-        if (!Array.isArray(rawData)) {
+        if (!Array.isArray(rawData) || rawData.length === 0) {
             throw new Error(`Received unknown response format.`);
         }
         ;
@@ -121,11 +122,117 @@ export class NBPApiClient {
             console.debug(rawData);
         }
         ;
-        return rawData;
+        const data = rawData.map(({ rates, effectiveDate, ...row }) => ({
+            ...row,
+            effectiveDate,
+            rates: rates.map((rate) => (`mid` in rate
+                ? ({
+                    ...rate,
+                    mid: Number(Number(rate.mid / currencyFactor).toFixed(3))
+                })
+                : ({
+                    ...rate,
+                    bid: Number(Number(rate.bid / currencyFactor).toFixed(3)),
+                    ask: Number(Number(rate.ask / currencyFactor).toFixed(3)),
+                })))
+        }));
+        return data;
     }
     ;
-    async getRates({}) {
-        return ``;
+    async getRates(params) {
+        const client = new Axios();
+        let url = `${this.host}/exchangerates/rates/${params.table}/${params.code}`;
+        if (params.mode !== "current") {
+            switch (params.mode) {
+                case GetTableDataEnum.TOP_COUNT:
+                case "top-count":
+                    url += `/last/${params.maxCount}`;
+                    break;
+                case GetTableDataEnum.TODAY:
+                case "today":
+                    url += `/today`;
+                    break;
+                case GetTableDataEnum.SPECIFIED_DATE:
+                case "date":
+                    url = this.prepareUrlForSpecifiedDate(url, params.date);
+                    break;
+                case GetTableDataEnum.BETWEEN_DATES:
+                case "date-range":
+                    const { startDate, endDate } = params;
+                    url = this.prepareUrlForDateRange(url, startDate, endDate);
+                    break;
+                case GetTableDataEnum.DAYS_BEFORE:
+                case "days-before":
+                case GetTableDataEnum.DAYS_AFTER:
+                case "days-after":
+                    const { date, days, mode } = params;
+                    url = this.prepareUrlForRelativeDate(url, date, days, mode);
+                    break;
+                default:
+                    throw new Error(`Unknown retrieving mode for exchange rates.`);
+            }
+            ;
+        }
+        ;
+        const fomredDate = new Date().toISOString().replace("T", " ");
+        if (this.config.debug === true) {
+            console.log(`${fomredDate} | NBPApiClient | Sending request to url: ${url}`);
+        }
+        ;
+        const currencyFactor = this.config.currency === Iso4217CurrencyCodeEnum.PLN ? 1 : 1;
+        const response = await client.get(url, { params: { format: this.config.outputFormat } });
+        if (!response.data) {
+            throw new Error(`Failed to receive exchange rates.`);
+        }
+        ;
+        if (response.status === 404) {
+            throw new Error(`There are no data for ${params.mode}, status: 404.`);
+        }
+        if (this.config.outputFormat === `xml`) {
+            const bidPattern = /<Bid>([\d.]+)<\/Bid>/g;
+            const askPattern = /<Ask>([\d.]+)<\/Ask>/g;
+            const midPattern = /<Mid>([\d.]+)<\/Mid>/g;
+            response.data = response.data
+                .replaceAll("EffectiveDate", "EffectiveDate")
+                .replace(bidPattern, (_, value) => (`<Bid>${Number((Number(value) / currencyFactor).toFixed(3))}</Bid>`))
+                .replace(askPattern, (_, value) => (`<Ask>${Number((Number(value) / currencyFactor).toFixed(3))}</Ask>`))
+                .replace(midPattern, (_, value) => (`<Mid>${Number((Number(value) / currencyFactor).toFixed(3))}</Mid>`));
+            return response.data;
+        }
+        ;
+        const rawData = JSON.parse(response.data);
+        if (!rawData.rates || !Array.isArray(rawData.rates) || rawData.rates.length === 0) {
+            throw new Error(`Received unknown response format.`);
+        }
+        ;
+        if (this.config.debug === true) {
+            console.debug(`${fomredDate} | NBPApiClient | Successfully found ${rawData.rates.length} records`);
+            console.debug(`${fomredDate} | NBPApiClient | RAW Response:`);
+            console.debug(rawData);
+        }
+        ;
+        return {
+            table: rawData.table,
+            currency: rawData.currency,
+            code: rawData.code,
+            rates: rawData.rates.map((rate) => {
+                if (`mid` in rate) {
+                    return {
+                        no: rate.no,
+                        effectiveDate: new Date(rate.effectiveDate),
+                        mid: Number(Number(rate.mid / currencyFactor).toFixed(3))
+                    };
+                }
+                else {
+                    return {
+                        no: rate.no,
+                        effectiveDate: new Date(rate.effectiveDate),
+                        bid: Number(Number(rate.bid / currencyFactor).toFixed(3)),
+                        ask: Number(Number(rate.ask / currencyFactor).toFixed(3)),
+                    };
+                }
+            })
+        };
     }
     ;
     async getGoldPrice(params) {
@@ -200,6 +307,6 @@ export class NBPApiClient {
     ;
 }
 ;
-const client = new NBPApiClient({ outputFormat: `xml` });
-console.debug(await client.getTables({ mode: "current", table: `B` }));
+const client = new NBPApiClient({ outputFormat: `json` });
+console.debug(await client.getRates({ mode: "current", table: `A`, code: "USD" }));
 //# sourceMappingURL=nbp-api-client.js.map
