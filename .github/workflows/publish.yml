@@ -19,6 +19,12 @@ jobs:
 
       - run: npm install
 
+      - name: Lint source
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test
+
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
