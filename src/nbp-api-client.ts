@@ -1,6 +1,7 @@
 import {
     GetTableRow, GetTableRowRate, GetTablesParams, NBPApiClientConfiguration, TableCodes,
-    GetGoldPriceParams, GetGoldPriceResponse, GetRatesParams, GetTableResponse, GetRatesResponse, RawRateRowRate, RawRateRow, RawGoldPriceRecord,
+    GetGoldPriceParams, GetGoldPriceResponse, GetRatesParams, GetTableResponse, GetRatesResponse,
+    RawRateRowRate, RawRateRow, RawGoldPriceRecord,
 } from "./types.js";
 import {
     GetGoldPriceEnum, GetTableDataEnum, GoldMeasureUnitEnum,
@@ -226,7 +227,7 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
             console.log(`${fomredDate} | NBPApiClient | Sending request to url: ${url}`);
         };
 
-        const currencyFactor: number = this.config.currency === Iso4217CurrencyCodeEnum.PLN ? 1 : 1;
+        const currencyFactor: number = await this.resolveCurrencyFactor(params?.currency);
         const response = await client.get<string>(url, { params: { format: this.config.outputFormat } });
         if (!response.data) {
             throw new Error(`Failed to receive rates tables.`);
@@ -377,7 +378,7 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
             console.log(`${fomredDate} | NBPApiClient | Sending request to url: ${url}`);
         };
 
-        const currencyFactor: number = this.config.currency === Iso4217CurrencyCodeEnum.PLN ? 1 : 1;
+        const currencyFactor: number = await this.resolveCurrencyFactor(params?.currency);
         const response = await client.get<string>(url, { params: { format: this.config.outputFormat } });
         if (!response.data) {
             throw new Error(`Failed to receive exchange rates.`);
