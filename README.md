@@ -35,6 +35,29 @@ const goldPrice = await client.getGoldPrice();
 const tables = await client.getTables({ table: 'A', mode: 'current' });
 ```
 
+### 🛠️ Development
+
+To run the full quality suite locally:
+
+```bash
+npm install
+npm run build       # compile TypeScript to dist/
+npm run lint        # static analysis
+tnpm run test        # run unit tests
+npm run coverage    # generate coverage report
+```
+
+The package also includes a `prepare` script so that if you install directly
+directly from the Git repository (e.g. `npm install username/nbp-api-client`),
+it will compile automatically.
+
+### 🤝 Contributing
+
+Please open issues for bugs or feature requests and send pull requests with
+clear descriptions. The library follows semantic versioning; bump the
+version in `package.json` and update the changelog when adding features or
+fixes.
+
 ## ⚙️ Configuration
 
 ```typescript
@@ -452,4 +475,4 @@ If you encounter a problem or have a suggestion, please open an issue on [GitHub
 ---
 
 **Author:** [miqel-dll](https://github.com/miqel-dll)  
-**Version:** 0.3.0
+**Version:** 0.3.4

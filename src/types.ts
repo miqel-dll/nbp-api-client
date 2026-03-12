@@ -4,7 +4,8 @@ import {
 } from "./enums.js";
 
 export type NBPApiClientConfiguration<T extends OutputFormatEnum.JSON | OutputFormatEnum.XML | `xml` | `json`> = {
-    outputFormat: T,
+    // when `null` the query parameter is omitted and the API defaults to JSON
+    outputFormat: T | null,
     debug: boolean,
     currency: CurrencyCode | Iso4217CurrencyCodeEnum,
     unit: GoldMeasureUnitEnum,

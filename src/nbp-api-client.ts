@@ -16,19 +16,52 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
         currency: Iso4217CurrencyCodeEnum.USD,
         unit: GoldMeasureUnitEnum.OUNCES,
     };
-
-    private maxDaysRange = 93;
-
+    
     constructor(
         _config?: Partial<NBPApiClientConfiguration<O>>
     ) {
         this.config = { ...this.config, ..._config };
     };
-
+    
     private goldOunceInGrams: number = 31.1034768;
+    private maxDaysRange = 93;
     private get host(): string {
         return Buffer.from("aHR0cHM6Ly9hcGkubmJwLnBsL2FwaQ==", "base64").toString("utf-8");
     };
+
+    private checkNotFuture(
+        date: Date | string, name: string
+    ): void {
+        const checkedDate = new Date(date);
+        const now = new Date();
+        if (checkedDate.getTime() > now.getTime()) {
+            throw new Error(`${name} cannot be in the future.`);
+        }
+    }
+
+    private checkRange(start: Date | string, end: Date | string): void {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        const now = new Date();
+        if (startDate.getTime() > endDate.getTime()) {
+            throw new Error(`startDate must be earlier than endDate.`);
+        }
+
+        if (startDate.getTime() > now.getTime() || endDate.getTime() > now.getTime()) {
+            throw new Error(`Dates cannot be in the future.`);
+        }
+
+        const diffDays = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays > this.maxDaysRange) {
+            throw new Error(`Date range cannot be greater than ${this.maxDaysRange} days.`);
+        }
+    }
+
+    private checkDays(days: number): void {
+        if (days > this.maxDaysRange) {
+            throw new Error(`Days parameter cannot be greater than ${this.maxDaysRange}.`);
+        }
+    }
 
     private prepareUrlForRelativeDate(
         prefix: string, date: Date | string, days: number, mode: `days-after` | `days-before`
@@ -77,6 +110,42 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
     public async getTables<T extends TableCodes | TableCodeEnum>(
         params: GetTablesParams & { table: T }
     ): Promise<GetTableResponse<O, T>> {
+
+        if (params.mode !== 'current') {
+            switch (params.mode) {
+                case GetTableDataEnum.SPECIFIED_DATE:
+                case 'specified-date':
+                    this.checkNotFuture(params.date, 'date');
+                    break;
+
+                case GetTableDataEnum.BETWEEN_DATES:
+                case 'between-dates':
+                    this.checkRange(params.startDate, params.endDate);
+                    break;
+
+                case GetTableDataEnum.DAYS_BEFORE:
+                case 'days-before':
+                    this.checkNotFuture(params.date, 'date');
+                    this.checkDays(params.days);
+                    break;
+
+                case GetTableDataEnum.DAYS_AFTER:
+                case 'days-after':
+                    this.checkNotFuture(params.date, 'date');
+                    this.checkDays(params.days);
+                    {
+                        const end = new Date(params.date);
+                        end.setDate(end.getDate() + params.days);
+                        if (end > new Date()) {
+                            throw new Error(`Computed end date cannot be in the future.`);
+                        }
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
 
         const client = new Axios();
         let url = `${this.host}/exchangerates/tables/${params.table}`;
@@ -192,6 +261,42 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
     public async getRates<T extends TableCodes | TableCodeEnum>(
         params: GetRatesParams & { table: T }
     ): Promise<GetRatesResponse<O, T>> {
+
+        if (params.mode !== 'current') {
+            switch (params.mode) {
+                case GetTableDataEnum.SPECIFIED_DATE:
+                case 'date':
+                    this.checkNotFuture(params.date, 'date');
+                    break;
+
+                case GetTableDataEnum.BETWEEN_DATES:
+                case 'date-range':
+                    this.checkRange(params.startDate, params.endDate);
+                    break;
+
+                case GetTableDataEnum.DAYS_BEFORE:
+                case 'days-before':
+                    this.checkNotFuture(params.date, 'date');
+                    this.checkDays(params.days);
+                    break;
+
+                case GetTableDataEnum.DAYS_AFTER:
+                case 'days-after':
+                    this.checkNotFuture(params.date, 'date');
+                    this.checkDays(params.days);
+                    {
+                        const end = new Date(params.date);
+                        end.setDate(end.getDate() + params.days);
+                        if (end > new Date()) {
+                            throw new Error(`Computed end date cannot be in the future.`);
+                        }
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
 
         const client = new Axios();
         let url = `${this.host}/exchangerates/rates/${params.table}/${params.code}`;
@@ -310,6 +415,42 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
     public async getGoldPrice(
         params?: GetGoldPriceParams
     ): Promise<GetGoldPriceResponse | string> {
+
+        if (params && params.mode !== "current") {
+            switch (params.mode) {
+                case GetGoldPriceEnum.FROM_DATE:
+                case "from-date":
+                    this.checkNotFuture(params.date, 'date');
+                    break;
+
+                case GetGoldPriceEnum.BETWEEN_DATES:
+                case "between-dates":
+                    this.checkRange(params.startDate, params.endDate);
+                    break;
+
+                case GetGoldPriceEnum.DAYS_BEFORE:
+                case "days-before":
+                    this.checkNotFuture(params.date, 'date');
+                    this.checkDays(params.days);
+                    break;
+
+                case GetGoldPriceEnum.DAYS_AFTER:
+                case "days-after":
+                    this.checkNotFuture(params.date, 'date');
+                    this.checkDays(params.days);
+                    {
+                        const end = new Date(params.date);
+                        end.setDate(end.getDate() + params.days);
+                        if (end > new Date()) {
+                            throw new Error(`Computed end date cannot be in the future.`);
+                        }
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
 
         const client = new Axios();
         let url = `${this.host}/cenyzlota`;

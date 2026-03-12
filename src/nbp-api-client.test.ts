@@ -11,6 +11,7 @@ describe('NBPApiClient', () => {
 
   beforeEach(() => {
     mockGet = jest.fn();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Axios as any).mockImplementation(() => ({
       get: mockGet
     }));
@@ -104,10 +105,10 @@ describe('NBPApiClient', () => {
     });
 
     it('should throw error for unknown mode', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await expect(client.getGoldPrice({ mode: 'unknown' as any, currency: Iso4217CurrencyCodeEnum.PLN })).rejects.toThrow('Unknown retrieving mode for gold price.');
     });
 
-    // validation tests
     it('should reject when specific date is in the future', async () => {
       const future = new Date();
       future.setDate(future.getDate() + 10);
@@ -121,7 +122,7 @@ describe('NBPApiClient', () => {
     });
 
     it('should reject when date range exceeds maximum', async () => {
-      // both dates must be in the past; use a span of 100 days
+
       const end = new Date();
       end.setDate(end.getDate() - 1);
       const start = new Date(end);
@@ -177,8 +178,8 @@ describe('NBPApiClient', () => {
         expect(result.currency).toBe('dolar amerykański');
         expect(result.code).toBe('USD');
         expect(result.rates).toHaveLength(2);
-        expect(result.rates[0].effectiveDate).toEqual(new Date('2026-03-12'));
-        expect(result.rates[0].mid).toBe(3.687);
+        expect(result.rates[0]!.effectiveDate).toEqual(new Date('2026-03-12'));
+        expect(result.rates[0]!.mid).toBe(3.687);
       });
 
       it('should fetch top-count exchange rates', async () => {
@@ -228,7 +229,6 @@ describe('NBPApiClient', () => {
         expect(result.rates).toHaveLength(2);
       });
 
-      // validation tests
       it('should reject when specific date is in the future', async () => {
         const future = new Date();
         future.setDate(future.getDate() + 10);
@@ -260,6 +260,7 @@ describe('NBPApiClient', () => {
       });
 
       it('should throw error for unknown mode', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await expect(client.getRates({ table: 'A', code: 'USD', mode: 'unknown' as any })).rejects.toThrow('Unknown retrieving mode for exchange rates.');
       });
     });
@@ -287,8 +288,8 @@ describe('NBPApiClient', () => {
         expect(result.rates).toHaveLength(2);
         expect(result.rates[0]).toHaveProperty('bid');
         expect(result.rates[0]).toHaveProperty('ask');
-        expect(result.rates[0].bid).toBe(3.944);
-        expect(result.rates[0].ask).toBe(4.024);
+        expect(result.rates[0]!.bid).toBe(3.944);
+        expect(result.rates[0]!.ask).toBe(4.024);
       });
     });
 
@@ -360,9 +361,9 @@ describe('NBPApiClient', () => {
         expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A', { params: { format: OutputFormatEnum.JSON } });
         expect(Array.isArray(result)).toBe(true);
         expect(result).toHaveLength(2);
-        expect(result[0].table).toBe('A');
-        expect(result[0].rates).toHaveLength(2);
-        expect(result[0].rates[0].mid).toBe(3.687);
+        expect(result[0]!.table).toBe('A');
+        expect(result[0]!.rates).toHaveLength(2);
+        expect(result[0]!.rates[0]!.mid).toBe(3.687);
       });
 
       it('should fetch top-count tables', async () => {
@@ -412,7 +413,6 @@ describe('NBPApiClient', () => {
         expect(result).toHaveLength(2);
       });
 
-      // validation tests
       it('should reject when specific date is in the future', async () => {
         const future = new Date();
         future.setDate(future.getDate() + 10);
@@ -444,6 +444,7 @@ describe('NBPApiClient', () => {
       });
 
       it('should throw error for unknown mode', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await expect(client.getTables({ table: 'A', mode: 'unknown' as any })).rejects.toThrow('Unknown retrieving mode for tables data for table.');
       });
     });
@@ -469,11 +470,11 @@ describe('NBPApiClient', () => {
 
         expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/C', { params: { format: OutputFormatEnum.JSON } });
         expect(result).toHaveLength(1);
-        expect(result[0].table).toBe('C');
-        expect(result[0].rates[0]).toHaveProperty('bid');
-        expect(result[0].rates[0]).toHaveProperty('ask');
-        expect(result[0].rates[0].bid).toBe(3.944);
-        expect(result[0].rates[0].ask).toBe(4.024);
+        expect(result[0]!.table).toBe('C');
+        expect(result[0]!.rates[0]).toHaveProperty('bid');
+        expect(result[0]!.rates[0]).toHaveProperty('ask');
+        expect(result[0]!.rates[0]!.bid).toBe(3.944);
+        expect(result[0]!.rates[0]!.ask).toBe(4.024);
       });
     });
 
