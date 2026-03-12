@@ -107,6 +107,38 @@ describe('NBPApiClient', () => {
       await expect(client.getGoldPrice({ mode: 'unknown' as any, currency: Iso4217CurrencyCodeEnum.PLN })).rejects.toThrow('Unknown retrieving mode for gold price.');
     });
 
+    // validation tests
+    it('should reject when specific date is in the future', async () => {
+      const future = new Date();
+      future.setDate(future.getDate() + 10);
+      await expect(client.getGoldPrice({ mode: GetGoldPriceEnum.FROM_DATE, date: future })).rejects.toThrow('date cannot be in the future.');
+    });
+
+    it('should reject when startDate is after endDate', async () => {
+      const start = new Date('2026-03-10');
+      const end = new Date('2026-03-05');
+      await expect(client.getGoldPrice({ mode: GetGoldPriceEnum.BETWEEN_DATES, startDate: start, endDate: end })).rejects.toThrow('startDate must be earlier than endDate.');
+    });
+
+    it('should reject when date range exceeds maximum', async () => {
+      // both dates must be in the past; use a span of 100 days
+      const end = new Date();
+      end.setDate(end.getDate() - 1);
+      const start = new Date(end);
+      start.setDate(start.getDate() - 100);
+      await expect(client.getGoldPrice({ mode: GetGoldPriceEnum.BETWEEN_DATES, startDate: start, endDate: end })).rejects.toThrow('Date range cannot be greater than');
+    });
+
+    it('should reject when days parameter is too large', async () => {
+      const today = new Date();
+      await expect(client.getGoldPrice({ mode: GetGoldPriceEnum.DAYS_BEFORE, date: today, days: 200 })).rejects.toThrow('Days parameter cannot be greater than');
+    });
+
+    it('should reject when days-after produces future end date', async () => {
+      const today = new Date();
+      await expect(client.getGoldPrice({ mode: GetGoldPriceEnum.DAYS_AFTER, date: today, days: 5 })).rejects.toThrow('Computed end date cannot be in the future.');
+    });
+
     it('should throw error if no data received', async () => {
       mockGet.mockResolvedValue({ data: '' });
 
@@ -194,6 +226,37 @@ describe('NBPApiClient', () => {
 
         expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/2026-03-10/2026-03-12', { params: { format: OutputFormatEnum.JSON } });
         expect(result.rates).toHaveLength(2);
+      });
+
+      // validation tests
+      it('should reject when specific date is in the future', async () => {
+        const future = new Date();
+        future.setDate(future.getDate() + 10);
+        await expect(client.getRates({ table: 'A', code: 'USD', mode: 'date', date: future })).rejects.toThrow('date cannot be in the future.');
+      });
+
+      it('should reject when startDate is after endDate', async () => {
+        const start = new Date('2026-03-12');
+        const end = new Date('2026-03-10');
+        await expect(client.getRates({ table: 'A', code: 'USD', mode: 'date-range', startDate: start, endDate: end })).rejects.toThrow('startDate must be earlier than endDate.');
+      });
+
+      it('should reject when date range exceeds maximum', async () => {
+        const end = new Date();
+        end.setDate(end.getDate() - 1);
+        const start = new Date(end);
+        start.setDate(start.getDate() - 100);
+        await expect(client.getRates({ table: 'A', code: 'USD', mode: 'date-range', startDate: start, endDate: end })).rejects.toThrow('Date range cannot be greater than');
+      });
+
+      it('should reject when days parameter is too large', async () => {
+        const today = new Date();
+        await expect(client.getRates({ table: 'A', code: 'USD', mode: 'days-before', date: today, days: 200 })).rejects.toThrow('Days parameter cannot be greater than');
+      });
+
+      it('should reject when days-after produces future end date', async () => {
+        const today = new Date();
+        await expect(client.getRates({ table: 'A', code: 'USD', mode: 'days-after', date: today, days: 5 })).rejects.toThrow('Computed end date cannot be in the future.');
       });
 
       it('should throw error for unknown mode', async () => {
@@ -347,6 +410,37 @@ describe('NBPApiClient', () => {
 
         expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/2026-03-10/2026-03-12', { params: { format: OutputFormatEnum.JSON } });
         expect(result).toHaveLength(2);
+      });
+
+      // validation tests
+      it('should reject when specific date is in the future', async () => {
+        const future = new Date();
+        future.setDate(future.getDate() + 10);
+        await expect(client.getTables({ table: 'A', mode: 'specified-date', date: future })).rejects.toThrow('date cannot be in the future.');
+      });
+
+      it('should reject when startDate is after endDate', async () => {
+        const start = new Date('2026-03-12');
+        const end = new Date('2026-03-10');
+        await expect(client.getTables({ table: 'A', mode: 'between-dates', startDate: start, endDate: end })).rejects.toThrow('startDate must be earlier than endDate.');
+      });
+
+      it('should reject when date range exceeds maximum', async () => {
+        const end = new Date();
+        end.setDate(end.getDate() - 1);
+        const start = new Date(end);
+        start.setDate(start.getDate() - 100);
+        await expect(client.getTables({ table: 'A', mode: 'between-dates', startDate: start, endDate: end })).rejects.toThrow('Date range cannot be greater than');
+      });
+
+      it('should reject when days parameter is too large', async () => {
+        const today = new Date();
+        await expect(client.getTables({ table: 'A', mode: 'days-before', date: today, days: 200 })).rejects.toThrow('Days parameter cannot be greater than');
+      });
+
+      it('should reject when days-after produces future end date', async () => {
+        const today = new Date();
+        await expect(client.getTables({ table: 'A', mode: 'days-after', date: today, days: 5 })).rejects.toThrow('Computed end date cannot be in the future.');
       });
 
       it('should throw error for unknown mode', async () => {
