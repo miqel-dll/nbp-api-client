@@ -7,7 +7,6 @@ import {
     GetGoldPriceEnum, GetTableDataEnum, GoldMeasureUnitEnum,
     Iso4217CurrencyCodeEnum, OutputFormatEnum, TableCodeEnum
 } from "./enums.js";
-import { Axios } from "axios";
 
 export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
 
@@ -73,14 +72,13 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
             return 1;
         }
 
-        const client = new Axios();
-        const url = `${this.host}/exchangerates/rates/A/${curr}`;
-        const response = await client.get<string>(url, { params: { format: OutputFormatEnum.JSON } });
-        if (!response.data) {
+        const url = `${this.host}/exchangerates/rates/A/${curr}?format=${OutputFormatEnum.JSON}`;
+        const response = await fetch(url);
+        if (!response.ok) {
             throw new Error(`Failed to obtain currency factor for ${curr}.`);
         }
 
-        const raw: RawRateRow<'A'> = JSON.parse(response.data);
+        const raw: RawRateRow<'A'> = await response.json();
         if (!raw.rates || !Array.isArray(raw.rates) || raw.rates.length === 0) {
             throw new Error(`Unable to determine currency factor for ${curr}.`);
         }
@@ -178,7 +176,6 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
             }
         }
 
-        const client = new Axios();
         let url = `${this.host}/exchangerates/tables/${params.table}`;
 
         if (params.mode !== "current") {
@@ -228,13 +225,31 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
         };
 
         const currencyFactor: number = await this.resolveCurrencyFactor(params?.currency);
-        const response = await client.get<string>(url, { params: { format: this.config.outputFormat } });
-        if (!response.data) {
-            throw new Error(`Failed to receive rates tables.`);
-        };
 
+        const queryParams = new URLSearchParams();
+        if (this.config.outputFormat) {
+            queryParams.append('format', this.config.outputFormat);
+        }
+        const queryStr = queryParams.toString();
+        const urlWithParams = queryStr ? `${url}?${queryStr}` : url;
+
+        const response = await fetch(urlWithParams);
         if (response.status === 404) {
             throw new Error(`There are no data for ${params.mode}, status: 404.`);
+        }
+        if (!response.ok) {
+            throw new Error(`Failed to receive rates tables.`);
+        }
+
+        let responseData: string;
+        if (this.config.outputFormat === `xml`) {
+            responseData = await response.text();
+        } else {
+            responseData = await response.json().then(j => JSON.stringify(j));
+        }
+
+        if (!responseData) {
+            throw new Error(`Failed to receive rates tables.`);
         }
 
         if (this.config.outputFormat === `xml`) {
@@ -243,7 +258,7 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
             const askPattern = /<Ask>([\d.]+)<\/Ask>/g;
             const midPattern = /<Mid>([\d.]+)<\/Mid>/g;
 
-            response.data = response.data
+            responseData = responseData
                 .replaceAll("Data", "Date")
                 .replaceAll("Cena", "Price")
                 .replace(bidPattern, (_, value) => (
@@ -256,10 +271,10 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
                     `<Mid>${Number((Number(value) / currencyFactor).toFixed(3))}</Mid>`
                 ));
 
-            return response.data as GetTableResponse<O, T>;
+            return responseData as GetTableResponse<O, T>;
         };
 
-        const rawData: GetTableResponse<O, T, `raw`> = JSON.parse(response.data);
+        const rawData: GetTableResponse<O, T, `raw`> = JSON.parse(responseData);
         if (!Array.isArray(rawData) || rawData.length === 0) {
             throw new Error(`Received unknown response format.`);
         };
@@ -329,9 +344,7 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
             }
         }
 
-        const client = new Axios();
         let url = `${this.host}/exchangerates/rates/${params.table}/${params.code}`;
-
         if (params.mode !== "current") {
             switch (params.mode) {
                 case GetTableDataEnum.TOP_COUNT:
@@ -379,13 +392,31 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
         };
 
         const currencyFactor: number = await this.resolveCurrencyFactor(params?.currency);
-        const response = await client.get<string>(url, { params: { format: this.config.outputFormat } });
-        if (!response.data) {
-            throw new Error(`Failed to receive exchange rates.`);
-        };
 
+        const queryParams = new URLSearchParams();
+        if (this.config.outputFormat) {
+            queryParams.append('format', this.config.outputFormat);
+        }
+        const queryStr = queryParams.toString();
+        const urlWithParams = queryStr ? `${url}?${queryStr}` : url;
+
+        const response = await fetch(urlWithParams);
         if (response.status === 404) {
             throw new Error(`There are no data for ${params.mode}, status: 404.`);
+        }
+        if (!response.ok) {
+            throw new Error(`Failed to receive exchange rates.`);
+        }
+
+        let responseData: string;
+        if (this.config.outputFormat === `xml`) {
+            responseData = await response.text();
+        } else {
+            responseData = await response.json().then(j => JSON.stringify(j));
+        }
+
+        if (!responseData) {
+            throw new Error(`Failed to receive exchange rates.`);
         }
 
         if (this.config.outputFormat === `xml`) {
@@ -394,7 +425,7 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
             const askPattern = /<Ask>([\d.]+)<\/Ask>/g;
             const midPattern = /<Mid>([\d.]+)<\/Mid>/g;
 
-            response.data = response.data
+            responseData = responseData
                 .replaceAll("EffectiveDate", "EffectiveDate")
                 .replace(bidPattern, (_, value) => (
                     `<Bid>${Number((Number(value) / currencyFactor).toFixed(3))}</Bid>`
@@ -406,10 +437,10 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
                     `<Mid>${Number((Number(value) / currencyFactor).toFixed(3))}</Mid>`
                 ));
 
-            return response.data as GetRatesResponse<O, T>;
+            return responseData as GetRatesResponse<O, T>;
         };
 
-        const rawData: RawRateRow<T> = JSON.parse(response.data);
+        const rawData: RawRateRow<T> = JSON.parse(responseData);
         if (!rawData.rates || !Array.isArray(rawData.rates) || rawData.rates.length === 0) {
             throw new Error(`Received unknown response format.`);
         };
@@ -480,10 +511,9 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
 
                 default:
                     break;
-            }
-        }
+            };
+        };
 
-        const client = new Axios();
         let url = `${this.host}/cenyzlota`;
 
         if (params && params.mode !== "current") {
@@ -528,15 +558,35 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
 
         const priceMultiplier = this.config.unit === GoldMeasureUnitEnum.OUNCES ? this.goldOunceInGrams : 1;
         const currencyFactor: number = await this.resolveCurrencyFactor(params?.currency);
-        const response = await client.get<string>(url, { params: { format: this.config.outputFormat } });
-        if (!response.data) {
+
+        const queryParams = new URLSearchParams();
+        if (this.config.outputFormat) {
+            queryParams.append('format', this.config.outputFormat);
+        };
+
+        const queryStr = queryParams.toString();
+        const urlWithParams = queryStr ? `${url}?${queryStr}` : url;
+
+        const response = await fetch(urlWithParams);
+        if (!response.ok) {
+            throw new Error(`Failed to receive gold price.`);
+        };
+
+        let responseData: string;
+        if (this.config.outputFormat === `xml`) {
+            responseData = await response.text();
+        } else {
+            responseData = await response.json().then(j => JSON.stringify(j));
+        };
+
+        if (!responseData) {
             throw new Error(`Failed to receive gold price.`);
         };
 
         if (this.config.outputFormat === `xml`) {
 
             const pattern = /<Price>([\d.]+)<\/Price>/g;
-            response.data = response.data
+            responseData = responseData
                 .replaceAll("Data", "Date")
                 .replaceAll("CenaZlota", "GoldPrice")
                 .replaceAll("Cena", "Price")
@@ -544,10 +594,10 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
                     `<Price>${Number((Number(value) * priceMultiplier / currencyFactor).toFixed(3))}</Price>`
                 ));
 
-            return response.data;
+            return responseData;
         };
 
-        const rawData: GetGoldPriceResponse<`raw`> = JSON.parse(response.data);
+        const rawData: GetGoldPriceResponse<`raw`> = JSON.parse(responseData);
         if (!Array.isArray(rawData)) {
             throw new Error(`Received unknown response format.`);
         };

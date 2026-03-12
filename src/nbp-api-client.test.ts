@@ -1,42 +1,34 @@
 import { GetGoldPriceEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum } from './enums.js';
 import { NBPApiClient } from './nbp-api-client.js';
-import { GetRatesResponse } from './types.js';
-import { Axios } from 'axios';
 
-jest.mock('axios');
+// Mock fetch globally
+global.fetch = jest.fn();
+
+const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 
 describe('NBPApiClient', () => {
   let client: NBPApiClient<OutputFormatEnum.JSON>;
-  let mockGet: jest.Mock;
 
   beforeEach(() => {
-    mockGet = jest.fn();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (Axios as any).mockImplementation(() => ({
-      get: mockGet
-    }));
+    mockFetch.mockClear();
     client = new NBPApiClient({ outputFormat: OutputFormatEnum.JSON, currency: `PLN` });
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   describe('constructor', () => {
 
     it('should initialize with default config', () => {
-      const client = new NBPApiClient();
-      expect(client).toBeInstanceOf(NBPApiClient);
+      const newClient = new NBPApiClient();
+      expect(newClient).toBeInstanceOf(NBPApiClient);
     });
 
     it('should merge provided config with defaults', () => {
-      const client = new NBPApiClient({ debug: true, currency: Iso4217CurrencyCodeEnum.USD });
-      expect(client).toBeInstanceOf(NBPApiClient);
+      const newClient = new NBPApiClient({ debug: true, currency: Iso4217CurrencyCodeEnum.USD });
+      expect(newClient).toBeInstanceOf(NBPApiClient);
     });
 
   });
 
-  describe('getGoldPriceJSON', () => {
+  describe('getGoldPrice', () => {
 
     const mockResponse = [
       { data: '2023-01-01', cena: 250.0 },
@@ -44,13 +36,18 @@ describe('NBPApiClient', () => {
     ];
 
     beforeEach(() => {
-      mockGet.mockResolvedValue({ data: JSON.stringify(mockResponse) });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+        text: async () => JSON.stringify(mockResponse),
+      } as Response);
     });
 
     it('should fetch current gold price when no params', async () => {
       const result = await client.getGoldPrice();
 
-      expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota', { "params": { "format": "json" } });
+      expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota?format=json');
       expect(result).toEqual([
         { date: new Date('2023-01-01'), price: 7775.869, unit: "ounces", currency: "PLN" },
         { date: new Date('2023-01-02'), price: 7806.973, unit: "ounces", currency: "PLN" }
@@ -60,14 +57,14 @@ describe('NBPApiClient', () => {
     it('should fetch current gold price with mode current', async () => {
       const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.CURRENT, currency: Iso4217CurrencyCodeEnum.PLN });
 
-      expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota', { "params": { "format": "json" } });
+      expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota?format=json');
       expect(result).toHaveLength(2);
     });
 
     it('should fetch today gold price', async () => {
       const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.TODAY, currency: Iso4217CurrencyCodeEnum.PLN });
 
-      expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/today', { "params": { "format": "json" } });
+      expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/today?format=json');
       expect(result).toHaveLength(2);
     });
 
@@ -75,7 +72,7 @@ describe('NBPApiClient', () => {
       const date = new Date('2023-01-01');
       const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.FROM_DATE, date, currency: Iso4217CurrencyCodeEnum.PLN });
 
-      expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01', { "params": { "format": "json" } });
+      expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01?format=json');
       expect(result).toHaveLength(2);
     });
 
@@ -84,7 +81,7 @@ describe('NBPApiClient', () => {
       const endDate = new Date('2023-01-02');
       const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.BETWEEN_DATES, startDate, endDate, currency: Iso4217CurrencyCodeEnum.PLN });
 
-      expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01/2023-01-02', { "params": { "format": "json" } });
+      expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01/2023-01-02?format=json');
       expect(result).toHaveLength(2);
     });
 
@@ -92,7 +89,7 @@ describe('NBPApiClient', () => {
       const date = new Date('2023-01-05');
       const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.DAYS_BEFORE, date, days: 2, currency: Iso4217CurrencyCodeEnum.PLN });
 
-      expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-03/2023-01-05', { "params": { "format": "json" } });
+      expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-03/2023-01-05?format=json');
       expect(result).toHaveLength(2);
     });
 
@@ -100,7 +97,7 @@ describe('NBPApiClient', () => {
       const date = new Date('2023-01-01');
       const result = await client.getGoldPrice({ mode: GetGoldPriceEnum.DAYS_AFTER, date, days: 2, currency: Iso4217CurrencyCodeEnum.PLN });
 
-      expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01/2023-01-03', { "params": { "format": "json" } });
+      expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/cenyzlota/2023-01-01/2023-01-03?format=json');
       expect(result).toHaveLength(2);
     });
 
@@ -141,13 +138,21 @@ describe('NBPApiClient', () => {
     });
 
     it('should throw error if no data received', async () => {
-      mockGet.mockResolvedValue({ data: '' });
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+      } as Response);
 
       await expect(client.getGoldPrice()).rejects.toThrow('Failed to receive gold price.');
     });
 
     it('should throw error if response is not array', async () => {
-      mockGet.mockResolvedValue({ data: JSON.stringify({}) });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+        text: async () => '{}',
+      } as Response);
 
       await expect(client.getGoldPrice()).rejects.toThrow('Received unknown response format.');
     });
@@ -167,13 +172,18 @@ describe('NBPApiClient', () => {
       };
 
       beforeEach(() => {
-        mockGet.mockResolvedValue({ data: JSON.stringify(mockResponseTableA), status: 200 });
+        mockFetch.mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => mockResponseTableA,
+          text: async () => JSON.stringify(mockResponseTableA),
+        } as Response);
       });
 
       it('should fetch current exchange rate', async () => {
         const result = await client.getRates({ table: 'A', code: 'USD', mode: 'current' });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD?format=json');
         expect(result.table).toBe('A');
         expect(result.currency).toBe('dolar amerykański');
         expect(result.code).toBe('USD');
@@ -185,14 +195,14 @@ describe('NBPApiClient', () => {
       it('should fetch top-count exchange rates', async () => {
         const result = await client.getRates({ table: 'A', code: 'USD', mode: 'top-count', maxCount: 5 });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/last/5', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/last/5?format=json');
         expect(result.rates).toHaveLength(2);
       });
 
       it('should fetch today exchange rates', async () => {
         const result = await client.getRates({ table: 'A', code: 'USD', mode: 'today' });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/today', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/today?format=json');
         expect(result.rates).toHaveLength(2);
       });
 
@@ -200,7 +210,7 @@ describe('NBPApiClient', () => {
         const date = new Date('2026-03-12');
         const result = await client.getRates({ table: 'A', code: 'USD', mode: 'date', date });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/2026-03-12', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/2026-03-12?format=json');
         expect(result.rates).toHaveLength(2);
       });
 
@@ -209,7 +219,7 @@ describe('NBPApiClient', () => {
         const endDate = new Date('2026-03-12');
         const result = await client.getRates({ table: 'A', code: 'USD', mode: 'date-range', startDate, endDate });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/2026-03-10/2026-03-12', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/2026-03-10/2026-03-12?format=json');
         expect(result.rates).toHaveLength(2);
       });
 
@@ -217,7 +227,7 @@ describe('NBPApiClient', () => {
         const date = new Date('2026-03-12');
         const result = await client.getRates({ table: 'A', code: 'USD', mode: 'days-before', date, days: 2 });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/2026-03-10/2026-03-12', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/2026-03-10/2026-03-12?format=json');
         expect(result.rates).toHaveLength(2);
       });
 
@@ -225,7 +235,7 @@ describe('NBPApiClient', () => {
         const date = new Date('2026-03-10');
         const result = await client.getRates({ table: 'A', code: 'USD', mode: 'days-after', date, days: 2 });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/2026-03-10/2026-03-12', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/A/USD/2026-03-10/2026-03-12?format=json');
         expect(result.rates).toHaveLength(2);
       });
 
@@ -277,13 +287,18 @@ describe('NBPApiClient', () => {
       };
 
       beforeEach(() => {
-        mockGet.mockResolvedValue({ data: JSON.stringify(mockResponseTableC), status: 200 });
+        mockFetch.mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => mockResponseTableC,
+          text: async () => JSON.stringify(mockResponseTableC),
+        } as Response);
       });
 
       it('should fetch bid/ask rates from table C', async () => {
         const result = await client.getRates({ table: 'C', code: 'USD', mode: 'current' });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/C/USD', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/rates/C/USD?format=json');
         expect(result.table).toBe('C');
         expect(result.rates).toHaveLength(2);
         expect(result.rates[0]).toHaveProperty('bid');
@@ -295,31 +310,46 @@ describe('NBPApiClient', () => {
 
     describe('Error handling', () => {
       it('should throw error if no data received', async () => {
-        mockGet.mockResolvedValue({ data: '' });
+        mockFetch.mockResolvedValue({
+          ok: false,
+          status: 500,
+        } as Response);
 
         await expect(client.getRates({ table: 'A', code: 'USD', mode: 'current' })).rejects.toThrow('Failed to receive exchange rates.');
       });
 
       it('should throw error if status is 404', async () => {
-        mockGet.mockResolvedValue({ data: JSON.stringify({}), status: 404 });
+        mockFetch.mockResolvedValue({
+          ok: false,
+          status: 404,
+        } as Response);
 
         await expect(client.getRates({ table: 'A', code: 'USD', mode: 'current' })).rejects.toThrow('There are no data for current, status: 404.');
       });
 
       it('should throw error if rates array is empty', async () => {
-        const mockResponseEmpty: GetRatesResponse<'json', 'A'> = {
-          table: 'A',
-          currency: 'dolar amerykański',
-          code: 'USD',
-          rates: []
-        };
-        mockGet.mockResolvedValue({ data: JSON.stringify(mockResponseEmpty), status: 200 });
+        mockFetch.mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            table: 'A',
+            currency: 'dolar amerykański',
+            code: 'USD',
+            rates: []
+          }),
+          text: async () => '{}',
+        } as Response);
 
         await expect(client.getRates({ table: 'A', code: 'USD', mode: 'current' })).rejects.toThrow('Received unknown response format.');
       });
 
       it('should throw error if response format is invalid', async () => {
-        mockGet.mockResolvedValue({ data: JSON.stringify({ invalid: 'response' }), status: 200 });
+        mockFetch.mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => ({ invalid: 'response' }),
+          text: async () => '{}',
+        } as Response);
 
         await expect(client.getRates({ table: 'A', code: 'USD', mode: 'current' })).rejects.toThrow('Received unknown response format.');
       });
@@ -352,13 +382,18 @@ describe('NBPApiClient', () => {
       ];
 
       beforeEach(() => {
-        mockGet.mockResolvedValue({ data: JSON.stringify(mockResponseTableA), status: 200 });
+        mockFetch.mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => mockResponseTableA,
+          text: async () => JSON.stringify(mockResponseTableA),
+        } as Response);
       });
 
       it('should fetch current table', async () => {
         const result = await client.getTables({ table: 'A', mode: 'current' });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A?format=json');
         expect(Array.isArray(result)).toBe(true);
         expect(result).toHaveLength(2);
         expect(result[0]!.table).toBe('A');
@@ -369,14 +404,14 @@ describe('NBPApiClient', () => {
       it('should fetch top-count tables', async () => {
         const result = await client.getTables({ table: 'A', mode: 'top-count', maxCount: 5 });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/last/5', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/last/5?format=json');
         expect(result).toHaveLength(2);
       });
 
       it('should fetch table from today', async () => {
         const result = await client.getTables({ table: 'A', mode: 'today' });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/today', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/today?format=json');
         expect(result).toHaveLength(2);
       });
 
@@ -384,7 +419,7 @@ describe('NBPApiClient', () => {
         const date = new Date('2026-03-12');
         const result = await client.getTables({ table: 'A', mode: 'specified-date', date });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/2026-03-12', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/2026-03-12?format=json');
         expect(result).toHaveLength(2);
       });
 
@@ -393,7 +428,7 @@ describe('NBPApiClient', () => {
         const endDate = new Date('2026-03-12');
         const result = await client.getTables({ table: 'A', mode: 'between-dates', startDate, endDate });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/2026-03-10/2026-03-12', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/2026-03-10/2026-03-12?format=json');
         expect(result).toHaveLength(2);
       });
 
@@ -401,7 +436,7 @@ describe('NBPApiClient', () => {
         const date = new Date('2026-03-12');
         const result = await client.getTables({ table: 'A', mode: 'days-before', date, days: 2 });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/2026-03-10/2026-03-12', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/2026-03-10/2026-03-12?format=json');
         expect(result).toHaveLength(2);
       });
 
@@ -409,7 +444,7 @@ describe('NBPApiClient', () => {
         const date = new Date('2026-03-10');
         const result = await client.getTables({ table: 'A', mode: 'days-after', date, days: 2 });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/2026-03-10/2026-03-12', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/A/2026-03-10/2026-03-12?format=json');
         expect(result).toHaveLength(2);
       });
 
@@ -462,13 +497,18 @@ describe('NBPApiClient', () => {
       ];
 
       beforeEach(() => {
-        mockGet.mockResolvedValue({ data: JSON.stringify(mockResponseTableC), status: 200 });
+        mockFetch.mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => mockResponseTableC,
+          text: async () => JSON.stringify(mockResponseTableC),
+        } as Response);
       });
 
       it('should fetch bid/ask rates from table C', async () => {
         const result = await client.getTables({ table: 'C', mode: 'current' });
 
-        expect(mockGet).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/C', { params: { format: OutputFormatEnum.JSON } });
+        expect(mockFetch).toHaveBeenCalledWith('https://api.nbp.pl/api/exchangerates/tables/C?format=json');
         expect(result).toHaveLength(1);
         expect(result[0]!.table).toBe('C');
         expect(result[0]!.rates[0]).toHaveProperty('bid');
@@ -480,25 +520,41 @@ describe('NBPApiClient', () => {
 
     describe('Error handling', () => {
       it('should throw error if no data received', async () => {
-        mockGet.mockResolvedValue({ data: '' });
+        mockFetch.mockResolvedValue({
+          ok: false,
+          status: 500,
+        } as Response);
 
         await expect(client.getTables({ table: 'A', mode: 'current' })).rejects.toThrow('Failed to receive rates tables.');
       });
 
       it('should throw error if status is 404', async () => {
-        mockGet.mockResolvedValue({ data: JSON.stringify([]), status: 404 });
+        mockFetch.mockResolvedValue({
+          ok: false,
+          status: 404,
+        } as Response);
 
         await expect(client.getTables({ table: 'A', mode: 'current' })).rejects.toThrow('There are no data for current, status: 404.');
       });
 
       it('should throw error if response is not array', async () => {
-        mockGet.mockResolvedValue({ data: JSON.stringify({}), status: 200 });
+        mockFetch.mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => ({}),
+          text: async () => '{}',
+        } as Response);
 
         await expect(client.getTables({ table: 'A', mode: 'current' })).rejects.toThrow('Received unknown response format.');
       });
 
       it('should throw error if response array is empty', async () => {
-        mockGet.mockResolvedValue({ data: JSON.stringify([]), status: 200 });
+        mockFetch.mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => [],
+          text: async () => '[]',
+        } as Response);
 
         await expect(client.getTables({ table: 'A', mode: 'current' })).rejects.toThrow('Received unknown response format.');
       });
