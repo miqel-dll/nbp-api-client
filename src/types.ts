@@ -173,6 +173,7 @@ export type GetTableRowRate<T extends TableCodes | TableCodeEnum> =
 type GettingRatesParamsEssentials = {
     table: TableCodes | TableCodeEnum,
     code: CurrencyCode | Iso4217CurrencyCodeEnum,
+    currency?: Iso4217CurrencyCodeEnum,
 };
 
 export type GetRatesParams =

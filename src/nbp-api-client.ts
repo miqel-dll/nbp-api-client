@@ -16,13 +16,13 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
         currency: Iso4217CurrencyCodeEnum.USD,
         unit: GoldMeasureUnitEnum.OUNCES,
     };
-    
+
     constructor(
         _config?: Partial<NBPApiClientConfiguration<O>>
     ) {
         this.config = { ...this.config, ..._config };
     };
-    
+
     private goldOunceInGrams: number = 31.1034768;
     private maxDaysRange = 93;
     private get host(): string {
@@ -62,6 +62,36 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
             throw new Error(`Days parameter cannot be greater than ${this.maxDaysRange}.`);
         }
     }
+
+    private async resolveCurrencyFactor(
+        currency?: Iso4217CurrencyCodeEnum
+    ): Promise<number> {
+
+        const curr = currency ?? this.config.currency;
+        if (curr === Iso4217CurrencyCodeEnum.PLN) {
+            return 1;
+        }
+
+        const client = new Axios();
+        const url = `${this.host}/exchangerates/rates/A/${curr}`;
+        const response = await client.get<string>(url, { params: { format: OutputFormatEnum.JSON } });
+        if (!response.data) {
+            throw new Error(`Failed to obtain currency factor for ${curr}.`);
+        }
+
+        const raw: RawRateRow<'A'> = JSON.parse(response.data);
+        if (!raw.rates || !Array.isArray(raw.rates) || raw.rates.length === 0) {
+            throw new Error(`Unable to determine currency factor for ${curr}.`);
+        }
+
+        const rate: RawRateRowRate<`A`> = raw.rates[0] as RawRateRowRate<`A`>;
+        if (!rate) {
+            throw new Error(`Failed to get rate for ${curr}`);
+        }
+
+        const value = rate.mid;
+        return Number(Number(value).toFixed(3));
+    };
 
     private prepareUrlForRelativeDate(
         prefix: string, date: Date | string, days: number, mode: `days-after` | `days-before`
@@ -496,7 +526,7 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
         };
 
         const priceMultiplier = this.config.unit === GoldMeasureUnitEnum.OUNCES ? this.goldOunceInGrams : 1;
-        const currencyFactor: number = this.config.currency === Iso4217CurrencyCodeEnum.PLN ? 1 : 1;
+        const currencyFactor: number = await this.resolveCurrencyFactor(params?.currency);
         const response = await client.get<string>(url, { params: { format: this.config.outputFormat } });
         if (!response.data) {
             throw new Error(`Failed to receive gold price.`);

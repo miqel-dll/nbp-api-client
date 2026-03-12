@@ -43,7 +43,7 @@ To run the full quality suite locally:
 npm install
 npm run build       # compile TypeScript to dist/
 npm run lint        # static analysis
-tnpm run test        # run unit tests
+npm run test        # run unit tests
 npm run coverage    # generate coverage report
 ```
 
@@ -85,7 +85,7 @@ const client = new NBPApiClient({
 
 ## 📊 Getting Exchange Rates (getRates)
 
-The `getRates()` method allows you to retrieve currency exchange rates from NBP in various time-based variants. You need to specify the table (`A`, `B`, or `C`) and currency code.
+The `getRates()` method allows you to retrieve currency exchange rates from NBP in various time-based variants. You need to specify the table (`A`, `B` or `C`) and currency code.
 
 ### Current rates
 
@@ -475,4 +475,4 @@ If you encounter a problem or have a suggestion, please open an issue on [GitHub
 ---
 
 **Author:** [miqel-dll](https://github.com/miqel-dll)  
-**Version:** 0.3.4
+**Version:** 1.0.0
