@@ -1,5 +1,7 @@
 import {
     GetGoldPriceParams, GetGoldPriceResponse, GetRatesParams, GetTableResponse,
+    GetTableRow,
+    GetTableRowRate,
     GetTablesParams, NBPApiClientConfiguration, TableCodes
 } from "./types.js";
 import {
@@ -7,10 +9,10 @@ import {
     Iso4217CurrencyCodeEnum, OutputFormatEnum, TableCodeEnum
 } from "./enums.js";
 import { Axios } from "axios";
-export class NBPApiClient {
+export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
 
-    private config: NBPApiClientConfiguration = {
-        outputFormat: OutputFormatEnum.JSON,
+    private config: NBPApiClientConfiguration<O> = {
+        outputFormat: null,
         debug: false,
         currency: Iso4217CurrencyCodeEnum.USD,
         unit: GoldMeasureUnitEnum.OUNCES,
@@ -19,7 +21,7 @@ export class NBPApiClient {
     private maxDaysRange = 93;
 
     constructor(
-        _config?: Partial<NBPApiClientConfiguration>
+        _config?: Partial<NBPApiClientConfiguration<O>>
     ) {
         this.config = { ...this.config, ..._config };
     };
@@ -75,7 +77,7 @@ export class NBPApiClient {
 
     public async getTables<T extends TableCodes | TableCodeEnum>(
         params: GetTablesParams & { table: T }
-    ): Promise<GetTableResponse<T> | string> {
+    ): Promise<GetTableResponse<O, T>> {
 
         const client = new Axios();
         let url = `${this.host}/exchangerates/tables/${params.table}`;
@@ -138,18 +140,27 @@ export class NBPApiClient {
 
         if (this.config.outputFormat === `xml`) {
 
-            const pattern = /<Price>([\d.]+)<\/Price>/g;
+            const bidPattern = /<Bid>([\d.]+)<\/Bid>/g;
+            const askPattern = /<Ask>([\d.]+)<\/Ask>/g;
+            const midPattern = /<Mid>([\d.]+)<\/Mid>/g;
+
             response.data = response.data
                 .replaceAll("Data", "Date")
                 .replaceAll("Cena", "Price")
-                .replace(pattern, (_, value) => (
-                    `<Price>${Number((Number(value) / currencyFactor).toFixed(3))}</Price>`
+                .replace(bidPattern, (_, value) => (
+                    `<Bid>${Number((Number(value) / currencyFactor).toFixed(3))}</Bid>`
+                ))
+                .replace(askPattern, (_, value) => (
+                    `<Ask>${Number((Number(value) / currencyFactor).toFixed(3))}</Ask>`
+                ))
+                .replace(midPattern, (_, value) => (
+                    `<Mid>${Number((Number(value) / currencyFactor).toFixed(3))}</Mid>`
                 ));
 
-            return response.data;
+            return response.data as GetTableResponse<O, T>;
         };
 
-        const rawData: GetTableResponse<T> = JSON.parse(response.data);
+        const rawData: GetTableResponse<O, T, `raw`> = JSON.parse(response.data);
         if (!Array.isArray(rawData)) {
             throw new Error(`Received unknown response format.`);
         };
@@ -160,8 +171,23 @@ export class NBPApiClient {
             console.debug(rawData);
         };
 
-        
-        return rawData;
+        const data = rawData.map(({ rates, effectiveDate, ...row }: GetTableRow<T>) => ({
+            ...row,
+            effectiveDate,
+            rates: rates.map((rate: GetTableRowRate<T>) => (
+                `mid` in rate
+                    ? ({
+                        ...rate,
+                        mid: Number(Number(rate.mid / currencyFactor).toFixed(3))
+                    })
+                    : ({
+                        ...rate,
+                        bid: Number(Number(rate.bid / currencyFactor).toFixed(3)),
+                        ask: Number(Number(rate.ask / currencyFactor).toFixed(3)),
+                    })))
+        }));
+
+        return data as GetTableResponse<O, T>;
     };
 
     public async getRates(
@@ -259,3 +285,5 @@ export class NBPApiClient {
 
 };
 
+const client = new NBPApiClient({ outputFormat: `json` });
+console.debug(await client.getTables({ mode: "current", table: `B` }))

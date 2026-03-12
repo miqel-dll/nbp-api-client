@@ -98,11 +98,15 @@ export class NBPApiClient {
             throw new Error(`There are no data for ${params.mode}, status: 404.`);
         }
         if (this.config.outputFormat === `xml`) {
-            const pattern = /<Price>([\d.]+)<\/Price>/g;
+            const bidPattern = /<Bid>([\d.]+)<\/Bid>/g;
+            const askPattern = /<Ask>([\d.]+)<\/Ask>/g;
+            const midPattern = /<Mid>([\d.]+)<\/Mid>/g;
             response.data = response.data
                 .replaceAll("Data", "Date")
                 .replaceAll("Cena", "Price")
-                .replace(pattern, (_, value) => (`<Price>${Number((Number(value) / currencyFactor).toFixed(3))}</Price>`));
+                .replace(bidPattern, (_, value) => (`<Bid>${Number((Number(value) / currencyFactor).toFixed(3))}</Bid>`))
+                .replace(askPattern, (_, value) => (`<Ask>${Number((Number(value) / currencyFactor).toFixed(3))}</Ask>`))
+                .replace(midPattern, (_, value) => (`<Mid>${Number((Number(value) / currencyFactor).toFixed(3))}</Mid>`));
             return response.data;
         }
         ;
@@ -196,14 +200,6 @@ export class NBPApiClient {
     ;
 }
 ;
-const oneMonthAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
-const twoWeeksAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 14);
-const client = new NBPApiClient({ outputFormat: `json`, debug: true });
-console.debug(await client.getTables({ mode: 'today', table: "A" }).catch(error => console.error(error)));
-console.debug(await client.getTables({ mode: 'current', table: "A" }).catch(error => console.error(error)));
-console.debug(await client.getTables({ mode: 'top-count', maxCount: 5, table: "A" }).catch(error => console.error(error)));
-console.debug(await client.getTables({ mode: 'between-dates', startDate: oneMonthAgo, endDate: twoWeeksAgo, table: 'A' }).catch(error => console.error(error)));
-console.debug(await client.getTables({ mode: 'days-after', days: 10, date: oneMonthAgo, table: 'A' }).catch(error => console.error(error)));
-console.debug(await client.getTables({ mode: 'days-before', days: 10, date: oneMonthAgo, table: 'A' }).catch(error => console.error(error)));
-console.debug(await client.getTables({ mode: 'specified-date', date: oneMonthAgo, table: 'A' }).catch(error => console.error(error)));
+const client = new NBPApiClient({ outputFormat: `xml` });
+console.debug(await client.getTables({ mode: "current", table: `B` }));
 //# sourceMappingURL=nbp-api-client.js.map

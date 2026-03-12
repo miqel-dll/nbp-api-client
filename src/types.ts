@@ -1,7 +1,10 @@
-import { GetGoldPriceEnum, GetTableDataEnum, GoldMeasureUnitEnum, Iso4217CurrencyCodeEnum, OutputFormatEnum, TableCodeEnum } from "./enums.js";
+import {
+    GetGoldPriceEnum, GetTableDataEnum, GoldMeasureUnitEnum,
+    Iso4217CurrencyCodeEnum, OutputFormatEnum, TableCodeEnum
+} from "./enums.js";
 
-export type NBPApiClientConfiguration = {
-    outputFormat: OutputFormatEnum | `xml` | `json`,
+export type NBPApiClientConfiguration<T extends OutputFormatEnum.JSON | OutputFormatEnum.XML | `xml` | `json`> = {
+    outputFormat: T,
     debug: boolean,
     currency: CurrencyCode | Iso4217CurrencyCodeEnum,
     unit: GoldMeasureUnitEnum,
@@ -138,12 +141,17 @@ export type GetTableDataForRelativeTime =
         days: number,
     }
 
-export type GetTableResponse<T extends TableCodes | TableCodeEnum> = GetTableRow<T>[];
+export type GetTableResponse<O, T extends TableCodes | TableCodeEnum, M extends `raw` | never = never> =
+    [O] extends [`json` | OutputFormatEnum.JSON]
+    ? GetTableRow<T, M>[]
+    : [O] extends [`xml` | OutputFormatEnum.XML]
+    ? string
+    : never;
 
-export type GetTableRow<T extends TableCodes | TableCodeEnum> = {
+export type GetTableRow<T extends TableCodes | TableCodeEnum, M extends `raw` | never = never> = {
     table: TableCodeEnum | TableCodes,
     no: string,
-    effectiveDate: string,
+    effectiveDate: [M] extends [never] ? Date : string,
     rates: GetTableRowRate<T>[],
 }
 
