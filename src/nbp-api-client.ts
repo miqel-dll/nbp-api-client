@@ -1,6 +1,6 @@
 import {
     GetTableRow, GetTableRowRate, GetTablesParams, NBPApiClientConfiguration, TableCodes,
-    GetGoldPriceParams, GetGoldPriceResponse, GetRatesParams, GetTableResponse, GetRatesResponse, GetRateRow, GetRateRowRate, RawRateRowRate,
+    GetGoldPriceParams, GetGoldPriceResponse, GetRatesParams, GetTableResponse, GetRatesResponse, RawRateRowRate, RawRateRow, RawGoldPriceRecord,
 } from "./types.js";
 import {
     GetGoldPriceEnum, GetTableDataEnum, GoldMeasureUnitEnum,
@@ -273,7 +273,7 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
             return response.data as GetRatesResponse<O, T>;
         };
 
-        const rawData: Omit<GetRateRow<T, `raw`>, 'rates'> & { rates: RawRateRowRate<T>[] } = JSON.parse(response.data);
+        const rawData: RawRateRow<T> = JSON.parse(response.data);
         if (!rawData.rates || !Array.isArray(rawData.rates) || rawData.rates.length === 0) {
             throw new Error(`Received unknown response format.`);
         };
@@ -380,12 +380,12 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
             throw new Error(`Received unknown response format.`);
         };
 
-        const data: GetGoldPriceResponse = rawData.map((row => ({
-            date: new Date(row?.data),
-            price: Number((Number(row?.cena) * priceMultiplier / currencyFactor).toFixed(3)),
+        const data: GetGoldPriceResponse = rawData.map((row: RawGoldPriceRecord) => ({
+            date: new Date(row.data),
+            price: Number((Number(row.cena) * priceMultiplier / currencyFactor).toFixed(3)),
             currency: this.config.currency,
             unit: this.config.unit,
-        })));
+        }));
 
         if (this.config.debug === true) {
             console.log(`${fomredDate} | NBPApiClient | Successfully found ${data.length} records`);

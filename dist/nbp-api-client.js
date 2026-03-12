@@ -292,12 +292,12 @@ export class NBPApiClient {
             throw new Error(`Received unknown response format.`);
         }
         ;
-        const data = rawData.map((row => ({
-            date: new Date(row?.data),
-            price: Number((Number(row?.cena) * priceMultiplier / currencyFactor).toFixed(3)),
+        const data = rawData.map((row) => ({
+            date: new Date(row.data),
+            price: Number((Number(row.cena) * priceMultiplier / currencyFactor).toFixed(3)),
             currency: this.config.currency,
             unit: this.config.unit,
-        })));
+        }));
         if (this.config.debug === true) {
             console.log(`${fomredDate} | NBPApiClient | Successfully found ${data.length} records`);
         }
@@ -307,6 +307,4 @@ export class NBPApiClient {
     ;
 }
 ;
-const client = new NBPApiClient({ outputFormat: `json` });
-console.debug(await client.getRates({ mode: "current", table: `A`, code: "USD" }));
 //# sourceMappingURL=nbp-api-client.js.map

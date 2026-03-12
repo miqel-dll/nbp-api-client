@@ -62,13 +62,15 @@ const client = new NBPApiClient({
 
 ## 📊 Getting Exchange Rates (getRates)
 
-The `getRates()` method allows you to retrieve currency exchange rates from NBP in various time-based variants.
+The `getRates()` method allows you to retrieve currency exchange rates from NBP in various time-based variants. You need to specify the table (`A`, `B`, or `C`) and currency code.
 
 ### Current rates
 
 ```typescript
-// Get current exchange rates to PLN
+// Get current exchange rate for USD from table A
 const rates = await client.getRates({ 
+  table: 'A',
+  code: 'USD',
   mode: 'current' 
 });
 ```
@@ -76,9 +78,11 @@ const rates = await client.getRates({
 ### Top N rates
 
 ```typescript
-// Get the last 10 rate quotes
+// Get the last 10 rate quotes for USD from table A
 const topRates = await client.getRates({ 
-  mode: 'topCount',
+  table: 'A',
+  code: 'USD',
+  mode: 'top-count',
   maxCount: 10 
 });
 ```
@@ -88,6 +92,8 @@ const topRates = await client.getRates({
 ```typescript
 // Get rates for today
 const todayRates = await client.getRates({ 
+  table: 'A',
+  code: 'USD',
   mode: 'today' 
 });
 ```
@@ -97,6 +103,10 @@ const todayRates = await client.getRates({
 ```typescript
 // Get rates for a specific day
 const dateRates = await client.getRates({ 
+  table: 'A',
+  code: 'USD',
+  table: 'A',
+  code: 'USD',
   mode: 'date',
   date: '2024-01-15'
   // or
@@ -109,6 +119,8 @@ const dateRates = await client.getRates({
 ```typescript
 // Get rates for a time period
 const rangeRates = await client.getRates({ 
+  table: 'A',
+  code: 'USD',
   mode: 'date-range',
   startDate: '2024-01-01',
   endDate: '2024-01-31'
@@ -120,6 +132,8 @@ const rangeRates = await client.getRates({
 ```typescript
 // Get rates from the last 7 days before a date
 const pastRates = await client.getRates({ 
+  table: 'A',
+  code: 'USD',
   mode: 'days-before',
   days: 7,
   date: '2024-01-15'
@@ -131,6 +145,8 @@ const pastRates = await client.getRates({
 ```typescript
 // Get rates for the next 5 days from a date
 const futureRates = await client.getRates({ 
+  table: 'A',
+  code: 'USD',
   mode: 'days-after',
   days: 5,
   date: '2024-01-15'
@@ -380,10 +396,10 @@ GoldMeasureUnitEnum.OUNCES | GoldMeasureUnitEnum.GRAMS
 TableCodeEnum.A | TableCodeEnum.B | TableCodeEnum.C
 
 // Modes for retrieving gold data
-GetGoldPriceEnum.CURRENT | GetGoldPriceEnum.TODAY | /* ... */
+GetGoldPriceEnum.CURRENT | GetGoldPriceEnum.TODAY | GetGoldPriceEnum.FROM_DATE | GetGoldPriceEnum.BETWEEN_DATES | GetGoldPriceEnum.DAYS_BEFORE | GetGoldPriceEnum.DAYS_AFTER
 
 // Modes for retrieving table data
-GetTableDataEnum.CURRENT | GetTableDataEnum.TOP_COUNT | /* ... */
+GetTableDataEnum.CURRENT | GetTableDataEnum.TOP_COUNT | GetTableDataEnum.TODAY | GetTableDataEnum.SPECIFIED_DATE | GetTableDataEnum.BETWEEN_DATES | GetTableDataEnum.DAYS_BEFORE | GetTableDataEnum.DAYS_AFTER
 ```
 
 ### Types
@@ -393,6 +409,7 @@ import type {
   GetRatesParams,
   GetGoldPriceParams,
   GetTablesParams,
+  GetRatesResponse,
   GetGoldPriceResponse,
   GetTableResponse
 } from "nbp-api-client";
@@ -435,4 +452,4 @@ If you encounter a problem or have a suggestion, please open an issue on [GitHub
 ---
 
 **Author:** [miqel-dll](https://github.com/miqel-dll)  
-**Version:** 0.2.6
+**Version:** 0.3.0

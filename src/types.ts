@@ -20,13 +20,13 @@ export type GoldPriceRecord<T extends never | `raw`>
 type FormedGoldPriceRecord = {
     date: Date,
     price: number,
+    currency: CurrencyCode | Iso4217CurrencyCodeEnum,
+    unit: GoldMeasureUnitEnum,
 };
 
-type RawGoldPriceRecord = {
+export type RawGoldPriceRecord = {
     data: string,
     cena: number,
-    currency: Iso4217CurrencyCodeEnum,
-    unit: GoldMeasureUnitEnum,
 };
 
 export type GetGoldPriceParams =
@@ -274,6 +274,11 @@ export type RawRateRowRate<T extends TableCodes | TableCodeEnum> =
         effectiveDate: string,
         mid: number,
     };
+
+// Raw rate response from API (before transformation)
+export type RawRateRow<T extends TableCodes | TableCodeEnum> = Omit<GetRateRow<T, `raw`>, 'rates'> & {
+    rates: RawRateRowRate<T>[];
+};
 
 export type CurrencyCode =
     | "AED"
