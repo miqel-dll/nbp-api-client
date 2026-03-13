@@ -475,4 +475,4 @@ If you encounter a problem or have a suggestion, please open an issue on [GitHub
 ---
 
 **Author:** [miqel-dll](https://github.com/miqel-dll)  
-**Version:** 1.0.0
+**Version:** 1.1.1

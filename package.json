@@ -1,6 +1,6 @@
 {
   "name": "nbp-api-client",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "description": "Library that enables easy retrieval and processing of data from the National Bank of Poland (NBP) API, such as exchange rates and historical currency data. A simple interface allows quick integration of financial data into your applications.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -43,7 +43,11 @@
     "testEnvironment": "node",
     "globals": {
       "ts-jest": {
-        "diagnostics": { "ignoreCodes": [151002] }
+        "diagnostics": {
+          "ignoreCodes": [
+            151002
+          ]
+        }
       }
     },
     "extensionsToTreatAsEsm": [
@@ -57,7 +61,7 @@
     ]
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=18"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -68,7 +72,5 @@
     "eslint": "^10.0.3",
     "jest": "^30.2.0",
     "ts-jest": "^29.4.6"
-  },
-  "dependencies": {
-}
+  }
 }
