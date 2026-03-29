@@ -26,7 +26,7 @@ export class NBPApiClient<O extends OutputFormatEnum | `xml` | `json`> {
     private goldOunceInGrams: number = 31.1034768;
     private maxDaysRange = 93;
     private get host(): string {
-        return Buffer.from("aHR0cHM6Ly9hcGkubmJwLnBsL2FwaQ==", "base64").toString("utf-8");
+        return atob("aHR0cHM6Ly9hcGkubmJwLnBsL2FwaQ==");
     };
 
     private checkNotFuture(

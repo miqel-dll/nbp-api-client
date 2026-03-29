@@ -48,7 +48,7 @@ npm run coverage    # generate coverage report
 ```
 
 The package also includes a `prepare` script so that if you install directly
-directly from the Git repository (e.g. `npm install username/nbp-api-client`),
+directly from the Git repository (e.g. `npm install nbp-api-client`),
 it will compile automatically.
 
 ### 🤝 Contributing
@@ -475,4 +475,4 @@ If you encounter a problem or have a suggestion, please open an issue on [GitHub
 ---
 
 **Author:** [miqel-dll](https://github.com/miqel-dll)  
-**Version:** 1.1.1
+**Version:** 1.1.2
