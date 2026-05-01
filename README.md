@@ -51,13 +51,6 @@ The package also includes a `prepare` script so that if you install directly
 directly from the Git repository (e.g. `npm install nbp-api-client`),
 it will compile automatically.
 
-### 🤝 Contributing
-
-Please open issues for bugs or feature requests and send pull requests with
-clear descriptions. The library follows semantic versioning; bump the
-version in `package.json` and update the changelog when adding features or
-fixes.
-
 ## ⚙️ Configuration
 
 ```typescript
@@ -464,15 +457,20 @@ The compiled code is located in the `dist/` directory.
 - [NBP API Documentation](https://api.nbp.pl/) - Details about endpoints, formats, and limitations
 - [ISO 4217](https://en.wikipedia.org/wiki/ISO_4217) - Currency codes standard
 
+### 🤝 Contributing
+
+Please open issues for bugs or feature requests and send pull requests with
+clear descriptions. The library follows semantic versioning; bump the
+version in `package.json` and update the changelog when adding features or
+fixes.
+
+If you encounter a problem or have a suggestion, please open an issue on [GitHub](https://github.com/majqel-dll/nbp-api-client/issues).
+
 ## 📄 License
 
-MIT © 2026 [miqel-dll](https://github.com/miqel-dll)
-
-## 🤝 Support
-
-If you encounter a problem or have a suggestion, please open an issue on [GitHub](https://github.com/miqel-dll/nbp-api-client/issues).
+MIT © 2026 [majqel-dll](https://github.com/majqel-dll)
 
 ---
 
-**Author:** [miqel-dll](https://github.com/miqel-dll)  
+**Author:** [majqel-dll](https://github.com/majqel-dll)  
 **Version:** 1.1.2
